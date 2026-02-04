@@ -1,0 +1,93 @@
+import 'package:vital_step/ui/bottom_sheets/notice/notice_sheet.dart';
+import 'package:vital_step/ui/dialogs/info_alert/info_alert_dialog.dart';
+import 'package:vital_step/ui/views/home/home_view.dart';
+import 'package:vital_step/ui/views/startup/startup_view.dart';
+import 'package:stacked/stacked_annotations.dart';
+import 'package:stacked_services/stacked_services.dart';
+import 'package:vital_step/ui/views/login/login_view.dart';
+import 'package:vital_step/ui/views/sign_up/sign_up_view.dart';
+import 'package:vital_step/ui/views/dashboard/dashboard_view.dart';
+import 'package:vital_step/ui/views/report/report_view.dart';
+import 'package:vital_step/ui/views/assesment/assesment_view.dart';
+import 'package:vital_step/ui/views/account/account_view.dart';
+import 'package:vital_step/ui/views/home_tab/home_tab_view.dart';
+import 'package:vital_step/ui/views/faq/faq_view.dart';
+import 'package:vital_step/ui/views/privacy_policy/privacy_policy_view.dart';
+import 'package:vital_step/ui/views/device/device_view.dart';
+import 'package:vital_step/services/login_service.dart';
+import 'package:vital_step/services/accounts_service.dart';
+import 'package:vital_step/ui/views/kill_app/kill_app_view.dart';
+import 'package:vital_step/services/api_calls_service.dart';
+import 'package:vital_step/ui/views/test_taking/test_taking_view.dart';
+import 'package:vital_step/ui/views/test_result/test_result_view.dart';
+import 'package:vital_step/ui/views/assessment_detail/assessment_detail_view.dart';
+import 'package:vital_step/ui/dialogs/create_test/create_test_dialog.dart';
+import 'package:vital_step/ui/views/assessment_history/assessment_history_view.dart';
+import 'package:vital_step/ui/dialogs/set_reminder/set_reminder_dialog.dart';
+import 'package:vital_step/services/notifications_service.dart';
+import 'package:vital_step/ui/dialogs/reset_password/reset_password_dialog.dart';
+import 'package:vital_step/ui/views/password_reset_view/password_reset_view_view.dart';
+import 'package:vital_step/ui/views/home_specialist/home_specialist_view.dart';
+import 'package:vital_step/ui/views/home_tab_specialist/home_tab_specialist_view.dart';
+import 'package:vital_step/ui/views/account_specialist/account_specialist_view.dart';
+import 'package:vital_step/ui/dialogs/add_patient/add_patient_dialog.dart';
+import 'package:vital_step/services/specialist_service.dart';
+import 'package:vital_step/ui/dialogs/create_assessment/create_assessment_dialog.dart';
+import 'package:vital_step/ui/dialogs/add_comment/add_comment_dialog.dart';
+import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.dart';
+// @stacked-import
+
+@StackedApp(
+  logger: StackedLogger(),
+  routes: [
+    MaterialRoute(page: HomeView),
+    MaterialRoute(page: StartupView),
+    MaterialRoute(page: LoginView),
+    MaterialRoute(page: SignUpView),
+    MaterialRoute(page: DashboardView),
+    MaterialRoute(page: ReportView),
+    MaterialRoute(page: AssesmentView),
+    MaterialRoute(page: AccountView),
+    MaterialRoute(page: HomeTabView),
+    MaterialRoute(page: FaqView),
+    MaterialRoute(page: PrivacyPolicyView),
+    MaterialRoute(page: DeviceView),
+    MaterialRoute(page: KillAppView),
+    MaterialRoute(page: TestTakingView),
+    MaterialRoute(page: TestResultView),
+    MaterialRoute(page: AssessmentDetailView),
+    MaterialRoute(page: AssessmentHistoryView),
+    MaterialRoute(page: PasswordResetViewView),
+    MaterialRoute(page: HomeSpecialistView),
+    MaterialRoute(page: HomeTabSpecialistView),
+    MaterialRoute(page: AccountSpecialistView),
+    MaterialRoute(page: SignUpSpecialistView),
+// @stacked-route
+  ],
+  dependencies: [
+    LazySingleton(classType: BottomSheetService),
+    LazySingleton(classType: DialogService),
+    LazySingleton(classType: NavigationService),
+    LazySingleton(classType: LoginService),
+    LazySingleton(classType: AccountsService),
+    LazySingleton(classType: ApiCallsService),
+    LazySingleton(classType: NotificationsService),
+    LazySingleton(classType: SpecialistService),
+// @stacked-service
+  ],
+  bottomsheets: [
+    StackedBottomsheet(classType: NoticeSheet),
+    // @stacked-bottom-sheet
+  ],
+  dialogs: [
+    StackedDialog(classType: InfoAlertDialog),
+    StackedDialog(classType: CreateTestDialog),
+    StackedDialog(classType: SetReminderDialog),
+    StackedDialog(classType: ResetPasswordDialog),
+    StackedDialog(classType: AddPatientDialog),
+    StackedDialog(classType: CreateAssessmentDialog),
+    StackedDialog(classType: AddCommentDialog),
+// @stacked-dialog
+  ],
+)
+class App {}
