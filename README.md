@@ -2,6 +2,9 @@
 
 **VitalStep** is a premium, flagship-grade medical application designed for precision grip strength analysis and hand health tracking. Built with a focus on "Apple/Meta tier" aesthetics and intuitive data visualization, VitalStep bridges the gap between clinical assessment and patient-friendly analytics.
 
+## 📺 Video Demo
+Experience VitalStep in action: [Watch the Demo on Loom](https://www.loom.com/share/563402d77eac45a890312328861e4ad1)
+
 ## 🌟 Key Features
 
 ### 🎨 Premium Medical UI/UX
