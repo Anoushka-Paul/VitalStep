@@ -31,244 +31,226 @@ class AssesmentView extends StackedView<AssesmentViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text("Assessment"),
-        centerTitle: true,
-        automaticallyImplyLeading: isSpecialist == true ? true : false,
-        actions: [
-          isSpecialist == true
-              ? const SizedBox()
-              : IconButton(
-                  onPressed: () {
-                    NavigationService()
-                        .navigateToDeviceView(showExistingDevices: false);
-                  },
-                  icon: const Icon(
-                    Icons.devices,
-                  ),
+      backgroundColor: kcBackgroundColor,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 120,
+            floating: false,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: kcPrimaryColor,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+              title: const Text(
+                "Assessments",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: -0.5),
+              ),
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: kcPrimaryGradient,
                 ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            color: kcPrimaryColor.withAlpha(10),
-            child: SingleChildScrollView(
-              physics: BouncingScrollPhysics(),
-              scrollDirection: Axis.vertical,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      right: -30,
+                      bottom: -20,
+                      child: Icon(Icons.assignment_outlined, size: 150, color: Colors.white.withOpacity(0.05)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              IconButton(
+                onPressed: viewModel.navigateToGlobalHistory,
+                icon: const Icon(Icons.history_rounded, color: Colors.white),
+              ),
+              if (isSpecialist != true)
+                IconButton(
+                  onPressed: () => NavigationService().navigateToDeviceView(showExistingDevices: false),
+                  icon: const Icon(Icons.watch_outlined, color: Colors.white),
+                ),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: FutureBuilder<List<Assessment>?>(
                 future: viewModel.devicesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
+                    return const Center(child: Padding(padding: EdgeInsets.only(top: 100), child: CircularProgressIndicator(color: kcPrimaryColor)));
                   } else if (snapshot.hasError) {
-                    return const Text("Error fetching test");
+                    return _buildErrorState();
                   } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Text("No test found");
-                  } else if (snapshot.data == null) {
-                    return const Text("No test found");
+                    return _buildEmptyState(viewModel);
                   } else {
-                    final devices = snapshot.data!;
-                    return Container(
-                      color: Colors.white,
-                      height: screenWidth(context),
-                      child: ListView.builder(
-                          itemCount: devices.length,
-                          itemBuilder: (BuildContext buildContext, int index) {
-                            return InkWell(
-                              onTap: () {
-                                NavigationService()
-                                    .navigateToAssessmentDetailView(
-                                  patientUserId: patientAccount?.user.id!,
-                                  assessment: devices[index],
-                                  isSpecialist: isSpecialist,
-                                );
-                              },
-                              child: ListTile(
-                                  leading: Text((index + 1).toString()),
-                                  title: Text(devices[index].type),
-                                  subtitle: Text(
-                                      "${devices[index].posture} | ${devices[index].status}"),
-                                  trailing: isSpecialist == true
-                                      ? IconButton(
-                                          onPressed: () {
-                                            viewModel.deleteAssessment(
-                                                assessmentId: devices[index]
-                                                    .id
-                                                    .toString());
-                                          },
-                                          icon: const Icon(
-                                            Icons.delete,
-                                          ))
-                                      : MaterialButton(
-                                          disabledColor: Colors.grey,
-                                          onPressed: () {
-                                            if (devices[index]
-                                                    .currentlyActive ==
-                                                true) {
-                                              viewModel
-                                                  .takeTest(devices[index]);
-                                            } else {
-                                              Fluttertoast.showToast(
-                                                  msg:
-                                                      "Please complete the already running test.  ");
-                                            }
-                                          },
-                                          color:
-                                              devices[index].currentlyActive ==
-                                                      true
-                                                  ? kcPrimaryColor
-                                                  : Colors.grey,
-                                          child: const Text(
-                                            "Take Test",
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        )),
-                            );
-                          }),
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: snapshot.data!.length,
+                      separatorBuilder: (c, i) => verticalSpaceSmall,
+                      itemBuilder: (context, index) {
+                        final assessment = snapshot.data![index];
+                        return _buildAssessmentCard(context, viewModel, assessment, index);
+                      },
                     );
                   }
                 },
               ),
             ),
           ),
-          const Spacer(),
-          isSpecialist == true
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(width: screenWidth(context)),
-                    SizedBox(
-                      width: screenWidth(context) * 0.8,
-                      child: MaterialButton(
-                        color: const Color(0xff0101d3),
-                        onPressed: () async {
-                          if (viewModel.isBusy) return;
-                          viewModel.setBusy(true);
-                          try {
-                            final Profile profile =
-                                await viewModel.getPatientProfile(
-                                    patientUserId: patientAccount?.user.id);
-                            viewModel.setBusy(false);
-                            showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return Dialog(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                'User Details',
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 16),
-                                          Text('Name: ${profile.name}'),
-                                          Text('Email: ${profile.email}'),
-                                          Text(
-                                              'Phone Number: ${profile.phone}'),
-                                          // Add more fields as necessary
-                                          const SizedBox(height: 16),
-                                          Center(
-                                            child: MaterialButton(
-                                              color: kcPrimaryColor,
-                                              onPressed: () {
-                                                Navigator.of(context).pop();
-                                              },
-                                              child: const Text(
-                                                'Close',
-                                                style: TextStyle(
-                                                    color: Colors.white),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                });
-                          } catch (e) {
-                            viewModel.setBusy(false);
-                            Fluttertoast.showToast(
-                                msg: "Unable to show the account details");
-                          }
-                        },
-                        child: viewModel.isBusy
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'User Details',
-                                style: TextStyle(color: Colors.white),
-                              ),
+        ],
+      ),
+      floatingActionButton: isSpecialist == true 
+          ? null 
+          : FloatingActionButton.extended(
+              onPressed: viewModel.createSelfAssessment,
+              backgroundColor: kcPrimaryColor,
+              elevation: 8,
+              icon: const Icon(Icons.add_rounded, color: Colors.white),
+              label: const Text("New Test", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+    );
+  }
+
+  Widget _buildAssessmentCard(BuildContext context, AssesmentViewModel viewModel, Assessment assessment, int index) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        border: Border.all(color: kcLightGrey.withOpacity(0.3), width: 1),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: kcPrimaryColor.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Text("${index + 1}", style: const TextStyle(color: kcPrimaryColor, fontWeight: FontWeight.bold, fontSize: 18)),
+              ),
+            ),
+            horizontalSpaceMedium,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(assessment.type, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: kcDarkGreyColor)),
+                  verticalSpaceTiny,
+                  Row(
+                    children: [
+                      Icon(Icons.person_pin_circle_outlined, size: 14, color: kcMediumGrey.withOpacity(0.7)),
+                      const SizedBox(width: 4),
+                      Text(assessment.posture, style: const TextStyle(color: kcMediumGrey, fontSize: 12, fontWeight: FontWeight.w500)),
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(color: kcLightGrey, shape: BoxShape.circle),
                       ),
-                    ),
-                    verticalSpaceSmall,
-                    SizedBox(
-                      width: screenWidth(context) * 0.8,
-                      child: MaterialButton(
-                        color: kcPrimaryColor,
-                        onPressed: () async {
-                          final DialogService dialogService =
-                              locator<DialogService>();
-                          await dialogService.showCustomDialog(
-                              variant: DialogType.createAssessment,
-                              data: patientAccount?.user.id);
-                          viewModel.devicesFuture = viewModel.init();
-                          viewModel.rebuildUi();
-                        },
-                        child: const Text(
-                          'Create Assessment',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    verticalSpaceSmall,
-                    SizedBox(
-                      width: screenWidth(context) * 0.8,
-                      child: MaterialButton(
-                        color: Color(0xfff44236),
-                        onPressed: () {
-                          if (viewModel.busy(viewModel.deletingUser)) return;
-                          viewModel.deleteUser(patientAccount?.id);
-                        },
-                        child: viewModel.busy(viewModel.deletingUser)
-                            ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                            : const Text(
-                                'Delete User',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                      ),
-                    )
-                  ],
-                )
-              : const SizedBox()
+                      const SizedBox(width: 8),
+                      Text(assessment.status, style: TextStyle(color: assessment.status == "Active" ? kcSuccessColor : kcMediumGrey, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            VerticalDivider(color: Colors.grey.shade100, width: 30, thickness: 1),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildActionButton(
+                  icon: Icons.bar_chart_rounded,
+                  color: kcSecondaryColor,
+                  onTap: () => NavigationService().navigateToAssessmentHistoryView(assessment: assessment, patientId: patientAccount?.user.id),
+                ),
+                if (isSpecialist != true && assessment.currentlyActive == true) ...[
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    icon: Icons.play_arrow_rounded,
+                    color: kcPrimaryColor,
+                    isFilled: true,
+                    onTap: () => viewModel.takeTest(assessment),
+                  ),
+                ],
+                if (isSpecialist == true) ...[
+                  const SizedBox(width: 8),
+                  _buildActionButton(
+                    icon: Icons.delete_outline_rounded,
+                    color: kcErrorColor,
+                    onTap: () => viewModel.deleteAssessment(assessmentId: assessment.id.toString()),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton({required IconData icon, required Color color, required VoidCallback onTap, bool isFilled = false}) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isFilled ? color : color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: isFilled ? Colors.white : color, size: 20),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(AssesmentViewModel viewModel) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.assignment_outlined, size: 80, color: kcLightGrey),
+          verticalSpaceMedium,
+          const Text("No Assessments", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
+          verticalSpaceSmall,
+          const Text("Start your first test to see it here.", style: TextStyle(color: kcMediumGrey)),
+          if (isSpecialist != true) ...[
+            verticalSpaceLarge,
+            SizedBox(
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcPrimaryColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                ),
+                onPressed: viewModel.createSelfAssessment,
+                child: const Text("Start Now", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ]
         ],
       ),
     );
+  }
+
+  Widget _buildErrorState() {
+    return const Center(child: Text("Error fetching assessments", style: TextStyle(color: kcErrorColor)));
   }
 
   @override

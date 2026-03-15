@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -8,6 +6,7 @@ import 'package:vital_step/Model/Comment.dart';
 import 'package:vital_step/app/app.dialogs.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
+import 'package:vital_step/ui/common/app_colors.dart';
 import 'package:vital_step/ui/common/ui_helpers.dart';
 
 import 'assessment_detail_viewmodel.dart';
@@ -31,179 +30,237 @@ class AssessmentDetailView extends StackedView<AssessmentDetailViewModel> {
   ) {
     return Scaffold(
       backgroundColor: Colors.white,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text("Assessment Detail"),
-        actions: [
-          // IconButton(onPressed: () {}, icon: const Icon(Icons.picture_as_pdf))
-        ],
+        elevation: 0,
+        title: Text(
+          assessment.type,
+          style: const TextStyle(color: kcDarkGreyColor, fontWeight: FontWeight.bold, fontSize: 20),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: kcDarkGreyColor, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Container(
-        padding: const EdgeInsets.only(left: 25.0, right: 25.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildQuickStats(viewModel),
             verticalSpaceMedium,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "BMI -",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                horizontalSpaceMedium,
-                viewModel.busy(viewModel.calculatingBMI)
-                    ? const CircularProgressIndicator()
-                    : Text(
-                        viewModel.bmi.toString(),
-                        style: const TextStyle(
-                          fontSize: 20,
-                        ),
-                      ),
-              ],
-            ),
+            _buildDatesCard(viewModel),
             verticalSpaceMedium,
-            viewModel.busy(viewModel.calculatingDates)
-                ? const Center(child: CircularProgressIndicator())
-                : SizedBox(
-                    width: double.infinity,
-                    child: DataTable(
-                      border: TableBorder.all(),
-                      columns: const [
-                        DataColumn(label: Text('First Date')),
-                        DataColumn(label: Text('Last Date')),
-                      ],
-                      rows: [
-                        DataRow(cells: [
-                          DataCell(Text(viewModel.startDate)),
-                          DataCell(Text(viewModel.endDate)),
-                        ]),
-                      ],
-                    ),
-                  ),
-            verticalSpaceMedium,
-            InkWell(
-              onTap: () {
-                NavigationService().navigateToAssessmentHistoryView(
-                    assessment: assessment, patientId: patientUserId);
-              },
-              child: Container(
-                  color: const Color(0xff2196f3),
-                  width: screenWidth(context),
-                  height: 50,
-                  child: const Center(
-                      child: Text(
-                    "See Assessment History",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ))),
-            ),
-            verticalSpaceMedium,
-            isSpecialist == true
-                ? const SizedBox()
-                : InkWell(
-                    onTap: () {
-                      final dialogService = locator<DialogService>();
-                      dialogService.showCustomDialog(
-                          variant: DialogType.setReminder,
-                          data: assessment.toJson());
-                    },
-                    child: Container(
-                        color: const Color(0xff2196f3),
-                        width: screenWidth(context),
-                        height: 50,
-                        child: Center(
-                            child: Text(
-                          "Set ${assessment.type} Reminder",
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 16),
-                        ))),
-                  ),
-            verticalSpaceMedium,
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Remarks",
-                  style: TextStyle(fontSize: 16),
-                ),
-              ],
-            ),
-            Expanded(
-              child: FutureBuilder<List<Comment>>(
-                  future: viewModel.comments,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.connectionState ==
-                        ConnectionState.done) {
-                      if (snapshot.hasError) {
-                        return const Center(child: Text("Error"));
-                      } else if (snapshot.hasData) {
-                        final comments = snapshot.data;
-                        if (comments == null) {
-                          return const Center(child: Text("Error"));
-                        } else if (comments.isEmpty) {
-                          return const Center(child: Text("No Comments"));
-                        } else if (comments.isNotEmpty) {
-                          return SizedBox(
-                            height: 400,
-                            child: ListView.builder(
-                                itemCount: comments.length,
-                                itemBuilder: (BuildContext context, int index) {
-                                  return ListTile(
-                                    title: Text(comments[index].remarks),
-                                    subtitle: Text(
-                                        "${viewModel.getDateAndTime(comments[index].createdAt.toLocal())}"),
-                                    trailing: isSpecialist == true
-                                        ? IconButton(
-                                            onPressed: () async {
-                                              await viewModel.deleteRemark(
-                                                  id: comments[index].id);
-                                              viewModel.comments = null;
-                                              viewModel.rebuildUi();
-                                              viewModel.comments =
-                                                  viewModel.getComments(
-                                                      assessmentId:
-                                                          assessment.id);
-                                            },
-                                            icon: const Icon(Icons.delete))
-                                        : const SizedBox(),
-                                  );
-                                }),
-                          );
-                        }
-                      }
-                    }
-                    return const SizedBox();
-                  }),
-            ),
-            // Spacer(),
-            isSpecialist == true
-                ? SizedBox(
-                    width: double.infinity,
-                    child: MaterialButton(
-                      onPressed: () async {
-                        final dialogService = locator<DialogService>();
-                        await dialogService.showCustomDialog(
-                            variant: DialogType.addComment,
-                            data: assessment.toJson());
-                        viewModel.comments = null;
-                        viewModel.rebuildUi();
-                        viewModel.comments =
-                            viewModel.getComments(assessmentId: assessment.id);
-                      },
-                      color: Colors.blue,
-                      textColor: Colors.white,
-                      child: const Text("Add Comment"),
-                    ),
-                  )
-                : const SizedBox()
+            _buildActionButtons(context, viewModel),
+            verticalSpaceLarge,
+            _buildSectionHeader("Remarks"),
+            verticalSpaceSmall,
+            _buildRemarksList(viewModel),
+            verticalSpaceLarge,
+            if (isSpecialist == true) _buildAddCommentButton(viewModel),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildQuickStats(AssessmentDetailViewModel vm) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: kcPrimaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: kcPrimaryColor.withOpacity(0.1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildStatItem("BMI", vm.busy(vm.calculatingBMI) ? "..." : vm.bmi.toString(), kcPrimaryColor),
+          Container(width: 1, height: 40, color: kcPrimaryColor.withOpacity(0.1)),
+          _buildStatItem("Status", "Active", kcSecondaryColor), // Placeholder for status if available
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String label, String value, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(label, style: const TextStyle(color: kcMediumGrey, fontSize: 12, fontWeight: FontWeight.w600)),
+          verticalSpaceTiny,
+          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: color)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDatesCard(AssessmentDetailViewModel vm) {
+    if (vm.busy(vm.calculatingDates)) {
+      return const Center(child: CircularProgressIndicator(color: kcPrimaryColor));
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: premiumCardDecoration,
+      child: Column(
+        children: [
+          _buildDateRow("Started On", vm.startDate, Icons.calendar_today_outlined),
+          const Divider(height: 30),
+          _buildDateRow("Last Entry", vm.endDate, Icons.history),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateRow(String label, String date, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: kcSecondaryColor),
+        horizontalSpaceSmall,
+        Text(label, style: const TextStyle(color: kcMediumGrey, fontSize: 14)),
+        const Spacer(),
+        Text(date, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, AssessmentDetailViewModel vm) {
+    return Column(
+      children: [
+        _buildElevatedButton(
+          "See Assessment History",
+          Icons.bar_chart_rounded,
+          () => NavigationService().navigateToAssessmentHistoryView(assessment: assessment, patientId: patientUserId),
+          kcPrimaryColor,
+        ),
+        if (isSpecialist != true) ...[
+          verticalSpaceSmall,
+          _buildElevatedButton(
+            "Set Reminder",
+            Icons.notifications_active_outlined,
+            () => locator<DialogService>().showCustomDialog(variant: DialogType.setReminder, data: assessment.toJson()),
+            kcSecondaryColor,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildElevatedButton(String label, IconData icon, VoidCallback onTap, Color color) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 20),
+            horizontalSpaceSmall,
+            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kcDarkGreyColor));
+  }
+
+  Widget _buildRemarksList(AssessmentDetailViewModel vm) {
+    return FutureBuilder<List<Comment>>(
+      future: vm.comments,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: kcPrimaryColor));
+        }
+
+        final comments = snapshot.data ?? [];
+        if (comments.isEmpty) {
+          return _buildEmptyRemarks();
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: comments.length,
+          itemBuilder: (context, index) {
+            final comment = comments[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: premiumCardDecoration,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: kcSecondaryColor.withOpacity(0.1), shape: BoxShape.circle),
+                        child: const Icon(Icons.person, color: kcSecondaryColor, size: 16),
+                      ),
+                      horizontalSpaceSmall,
+                      Text(vm.getDateAndTime(comment.createdAt.toLocal()), style: const TextStyle(color: kcMediumGrey, fontSize: 12)),
+                      const Spacer(),
+                      if (isSpecialist == true)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: kcLightGrey, size: 20),
+                          onPressed: () async {
+                            await vm.deleteRemark(id: comment.id);
+                            vm.comments = null;
+                            vm.rebuildUi();
+                            vm.comments = vm.getComments(assessmentId: assessment.id);
+                          },
+                        )
+                    ],
+                  ),
+                  verticalSpaceTiny,
+                  Text(comment.remarks, style: const TextStyle(fontSize: 15, color: kcDarkGreyColor, height: 1.4)),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEmptyRemarks() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(40),
+      decoration: premiumCardDecoration,
+      child: Column(
+        children: const [
+          Icon(Icons.chat_bubble_outline, size: 40, color: kcLightGrey),
+          verticalSpaceSmall,
+          Text("No comments yet", style: TextStyle(color: kcMediumGrey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddCommentButton(AssessmentDetailViewModel vm) {
+    return _buildElevatedButton(
+      "Add Remark",
+      Icons.add_comment_rounded,
+      () async {
+        final dialogService = locator<DialogService>();
+        await dialogService.showCustomDialog(variant: DialogType.addComment, data: assessment.toJson());
+        vm.comments = null;
+        vm.rebuildUi();
+        vm.comments = vm.getComments(assessmentId: assessment.id);
+      },
+      kcDarkGreyColor,
     );
   }
 

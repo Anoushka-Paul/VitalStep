@@ -29,330 +29,18 @@ class LoginView extends StackedView<LoginViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kcBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 20),
-              Container(
-                height: MediaQuery.of(context).size.height * 0.2,
-                child: const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "VITALSTEP",
-                      style:
-                          TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 6),
-                    Text(
-                      "Login",
-                      style: TextStyle(
-                        fontSize: 22,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 20),
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 8),
-                                    child: Text(
-                                      "User Type",
-                                      style: TextStyle(
-                                        fontSize: generalTextFontSize,
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownButtonFormField<String>(
-                                    value: _selectedUserType,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Select User Type',
-                                      fillColor:
-                                          Color.fromARGB(33, 158, 158, 158),
-                                      filled: true,
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Colors.transparent),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Colors.transparent),
-                                      ),
-                                      floatingLabelBehavior:
-                                          FloatingLabelBehavior.never,
-                                    ),
-                                    items: _userTypes.map((String userType) {
-                                      return DropdownMenuItem<String>(
-                                        value: userType,
-                                        child: Text(userType),
-                                      );
-                                    }).toList(),
-                                    onChanged: (newValue) {
-                                      _selectedUserType = newValue!;
-                                      viewModel.notifyListeners();
-                                    },
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please select a user type';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ]),
-                            const SizedBox(height: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Text(
-                                    "Email",
-                                    style: TextStyle(
-                                      fontSize: generalTextFontSize,
-                                    ),
-                                  ),
-                                ),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                    labelText: "Email",
-
-                                    labelStyle: TextStyle(
-                                        fontSize: generalTextFontSize),
-                                    fillColor:
-                                        const Color.fromARGB(33, 158, 158, 158),
-                                    filled:
-                                        true, // Ensures the background color is applied
-                                    enabledBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors
-                                              .transparent), // No border when enabled
-                                    ),
-                                    focusedBorder: const OutlineInputBorder(
-                                      borderSide: BorderSide(
-                                          color: Colors
-                                              .transparent), // No border when focused
-                                    ),
-                                    floatingLabelBehavior: FloatingLabelBehavior
-                                        .never, // Keeps the label always fixed
-                                  ),
-                                  onSaved: (value) {
-                                    _email = value!;
-                                  },
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your Email';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Text(
-                                    "Password",
-                                    style: TextStyle(
-                                      fontSize: generalTextFontSize,
-                                    ),
-                                  ),
-                                ),
-                                TextFormField(
-                                  decoration: InputDecoration(
-                                      hintStyle: TextStyle(
-                                          fontSize: generalTextFontSize),
-                                      labelStyle: TextStyle(
-                                          fontSize: generalTextFontSize),
-                                      fillColor: const Color.fromARGB(
-                                          33, 158, 158, 158),
-                                      filled:
-                                          true, // Ensures the background color is applied
-                                      enabledBorder: const OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Colors
-                                                .transparent), // No border when enabled
-                                      ),
-                                      focusedBorder: const OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Colors
-                                                .transparent), // No border when focused
-                                      ),
-                                      labelText: 'Password',
-                                      floatingLabelBehavior: FloatingLabelBehavior
-                                          .never, // Keeps the label always fixed
-                                      suffixIcon: IconButton(
-                                        icon: Icon(viewModel.passwordVisible
-                                            ? Icons.visibility
-                                            : Icons.visibility_off),
-                                        onPressed: () {
-                                          viewModel.passwordVisible =
-                                              !viewModel.passwordVisible;
-                                          viewModel.rebuildUi();
-                                        },
-                                      )),
-                                  obscureText: viewModel.passwordVisible,
-                                  onSaved: (value) {
-                                    _password = value!;
-                                  },
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Please enter your password';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                              ],
-                            ),
-                            GestureDetector(
-                              onTap: () async {
-                                if (_formKey.currentState!.validate()) {
-                                  _formKey.currentState!.save();
-                                  final _loginService = locator<LoginService>();
-                                  if (viewModel.isBusy) {
-                                    return;
-                                  }
-                                  viewModel.setBusy(true);
-                                  await _loginService.signIn(
-                                      _email, _password, _selectedUserType);
-                                  viewModel.setBusy(false);
-                                }
-                              },
-                              child: Container(
-                                height: 55,
-                                margin: const EdgeInsets.only(top: 30),
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: kcPrimaryColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: viewModel.isBusy
-                                    ? const Center(
-                                        child: CircularProgressIndicator(
-                                          color: Colors.white,
-                                        ),
-                                      )
-                                    : const Center(
-                                        child: Text(
-                                          'Login',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Forgot Password ?",
-                                    style: TextStyle(
-                                      fontSize: generalTextFontSize,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      NavigationService()
-                                          .navigateToPasswordResetViewView();
-                                    },
-                                    child: Text(
-                                      "Reset Password",
-                                      style: TextStyle(
-                                          fontSize: generalTextFontSize,
-                                          color: kcPrimaryColor,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(10, 5, 10, 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "New User?",
-                                    style: TextStyle(
-                                      fontSize: generalTextFontSize,
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 5,
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      NavigationService()
-                                          .navigateToSignUpView();
-                                    },
-                                    child: Text(
-                                      "Sign Up",
-                                      style: TextStyle(
-                                          fontSize: generalTextFontSize,
-                                          color: kcPrimaryColor,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            verticalSpaceMedium,
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(10, 5, 10, 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () {
-                                      NavigationService()
-                                          .navigateToSignUpSpecialistView();
-                                    },
-                                    child: Text(
-                                      "Specialist Sign Up",
-                                      style: TextStyle(
-                                          fontSize: generalTextFontSize,
-                                          color: kcPrimaryColor,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
-                ),
-              )
+              const SizedBox(height: 60),
+              _buildHeader(),
+              const SizedBox(height: 40),
+              _buildLoginForm(context, viewModel),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -360,6 +48,176 @@ class LoginView extends StackedView<LoginViewModel> {
     );
   }
 
+  Widget _buildHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: kcPrimaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Icon(Icons.health_and_safety_rounded, color: kcPrimaryColor, size: 32),
+        ),
+        const SizedBox(height: 24),
+        const Text(
+          "Welcome back",
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: kcDarkGreyColor, letterSpacing: -0.5),
+        ),
+        verticalSpaceTiny,
+        const Text(
+          "Sign in to continue your health journey",
+          style: TextStyle(fontSize: 16, color: kcMediumGrey, fontWeight: FontWeight.w500),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoginForm(BuildContext context, LoginViewModel viewModel) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildLabel("Identity"),
+          DropdownButtonFormField<String>(
+            value: _selectedUserType,
+            decoration: premiumInputDecoration("Select User Type"),
+            items: _userTypes
+                .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                .toList(),
+            onChanged: (val) {
+              _selectedUserType = val!;
+              viewModel.notifyListeners();
+            },
+          ),
+          const SizedBox(height: 20),
+          _buildLabel("Email Address"),
+          TextFormField(
+            decoration: premiumInputDecoration("e.g. name@email.com"),
+            keyboardType: TextInputType.emailAddress,
+            onSaved: (val) => _email = val!,
+            validator: (val) => (val == null || val.isEmpty) ? "Email is required" : null,
+          ),
+          const SizedBox(height: 20),
+          _buildLabel("Password"),
+          TextFormField(
+            obscureText: !viewModel.passwordVisible,
+            decoration: premiumInputDecoration("••••••••").copyWith(
+              suffixIcon: IconButton(
+                icon: Icon(viewModel.passwordVisible ? Icons.visibility : Icons.visibility_off, color: kcMediumGrey),
+                onPressed: () {
+                  viewModel.passwordVisible = !viewModel.passwordVisible;
+                  viewModel.rebuildUi();
+                },
+              ),
+            ),
+            onSaved: (val) => _password = val!,
+            validator: (val) => (val == null || val.isEmpty) ? "Password is required" : null,
+          ),
+          const SizedBox(height: 30),
+          _buildLoginButton(viewModel),
+          const SizedBox(height: 24),
+          _buildFooterLinks(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: kcDarkGreyColor)),
+    );
+  }
+
+  InputDecoration premiumInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: kcLightGrey, fontSize: 15, fontWeight: FontWeight.w500),
+      fillColor: Colors.white,
+      filled: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: BorderSide(color: kcLightGrey.withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: kcPrimaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(20),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+      ),
+    );
+  }
+
+  Widget _buildLoginButton(LoginViewModel vm) {
+    return InkWell(
+      onTap: () async {
+        if (_formKey.currentState!.validate()) {
+          _formKey.currentState!.save();
+          if (vm.isBusy) return;
+          vm.setBusy(true);
+          await locator<LoginService>().signIn(_email, _password, _selectedUserType);
+          vm.setBusy(false);
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        height: 64,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [kcPrimaryColor, kcPrimaryColorDark]),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: kcPrimaryColor.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
+        ),
+        child: Center(
+          child: vm.isBusy
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text("Sign In", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFooterLinks(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Trouble signing in? ", style: TextStyle(color: kcMediumGrey)),
+            GestureDetector(
+              onTap: () => NavigationService().navigateToPasswordResetViewView(),
+              child: const Text("Reset Password", style: TextStyle(color: kcPrimaryColor, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Don't have an account? ", style: TextStyle(color: kcMediumGrey)),
+            GestureDetector(
+              onTap: () => NavigationService().navigateToSignUpView(),
+              child: const Text("Sign Up", style: TextStyle(color: kcPrimaryColor, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => NavigationService().navigateToSignUpSpecialistView(),
+          child: const Text("Join as Specialist", style: TextStyle(color: kcSecondaryColor, fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
+  }
   @override
   LoginViewModel viewModelBuilder(
     BuildContext context,

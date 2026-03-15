@@ -82,10 +82,21 @@ class AccountsService {
   }
 
   Future<bool> killApp() async {
-    final SupabaseClient client = Supabase.instance.client;
-    final response =
-        await client.from("vitalStep").select().eq("id", 1).single();
-    return response['kill_switch'];
+    try {
+      final SupabaseClient client = Supabase.instance.client;
+      // Added timeout to prevent infinite hang if network is slow/broken
+      final response = await client
+          .from("vitalStep")
+          .select()
+          .eq("id", 1)
+          .single()
+          .timeout(const Duration(seconds: 3));
+      return response['kill_switch'] ?? false;
+    } catch (e) {
+      _logger.w("Kill switch check skipped (likely offline): $e");
+      // Default to false (don't kill app) if we can't reach the server
+      return false;
+    }
   }
 
   Future<void> deleteAccount() async {

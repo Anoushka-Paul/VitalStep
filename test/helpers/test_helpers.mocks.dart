@@ -1019,6 +1019,17 @@ class MockApiCallsService extends _i1.Mock implements _i17.ApiCallsService {
       ) as _i11.Future<List<_i18.Assessment>>);
 
   @override
+  _i11.Future<List<_i4.Test>> getAllUserTests() => (super.noSuchMethod(
+        Invocation.method(
+          #getAllUserTests,
+          [],
+        ),
+        returnValue: _i11.Future<List<_i4.Test>>.value(<_i4.Test>[]),
+        returnValueForMissingStub:
+            _i11.Future<List<_i4.Test>>.value(<_i4.Test>[]),
+      ) as _i11.Future<List<_i4.Test>>);
+
+  @override
   _i11.Future<_i4.Test> getLastTest() => (super.noSuchMethod(
         Invocation.method(
           #getLastTest,

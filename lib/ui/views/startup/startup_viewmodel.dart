@@ -32,12 +32,13 @@ class StartupViewModel extends BaseViewModel {
       }
     } catch (e) {
       final dialogService = locator<DialogService>();
-      dialogService.showDialog(
+      await dialogService.showDialog(
         title: 'Error',
         description: e.toString(),
       );
       final box = GetStorage();
       await box.erase();
+      _navigationService.clearStackAndShow(Routes.loginView);
     }
   }
 }

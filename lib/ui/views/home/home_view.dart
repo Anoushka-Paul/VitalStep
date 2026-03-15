@@ -18,47 +18,38 @@ class HomeView extends StackedView<HomeViewModel> {
       backgroundColor: Colors.white,
       body: viewModel.screens[viewModel.selectedIndex],
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(bottom: 10),
-        decoration: const BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Color.fromARGB(92, 158, 158, 158),
-              offset: Offset(0, 0),
-              blurRadius: 6,
-            )
-          ],
+        decoration: BoxDecoration(
           color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade100, width: 1)),
         ),
         child: BottomNavigationBar(
-          elevation: 0,
           backgroundColor: Colors.white,
           type: BottomNavigationBarType.fixed,
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.home_filled),
               label: 'Home',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.assessment),
-              label: 'Assessments',
+              icon: Icon(Icons.dashboard_outlined),
+              label: 'Dashboard',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.more_horiz),
+              icon: Icon(Icons.analytics_outlined),
+              label: 'History',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
               label: 'Account',
             ),
           ],
           selectedItemColor: kcPrimaryColor,
-          unselectedItemColor: Colors.grey,
-          selectedFontSize: 10,
-          unselectedFontSize: 10,
-          selectedLabelStyle:
-              const TextStyle(color: kcPrimaryColor, fontSize: 12),
-          selectedIconTheme: const IconThemeData(
-            size: 17,
-          ),
-          unselectedIconTheme: const IconThemeData(size: 17),
-          unselectedLabelStyle:
-              const TextStyle(color: Colors.grey, fontSize: 12),
+          unselectedItemColor: kcMediumGrey,
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
+          elevation: 0,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
           currentIndex: viewModel.selectedIndex,
           onTap: (selectedIndex) {
             viewModel.onItemTapped(selectedIndex);
@@ -76,7 +67,6 @@ class HomeView extends StackedView<HomeViewModel> {
 
   @override
   void onViewModelReady(HomeViewModel viewModel) {
-    // TODO: implement onViewModelReady
     if (firstPage != null) {
       viewModel.onItemTapped(firstPage!);
     }

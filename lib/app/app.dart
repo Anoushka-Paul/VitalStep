@@ -18,6 +18,7 @@ import 'package:vital_step/services/login_service.dart';
 import 'package:vital_step/services/accounts_service.dart';
 import 'package:vital_step/ui/views/kill_app/kill_app_view.dart';
 import 'package:vital_step/services/api_calls_service.dart';
+import 'package:vital_step/services/analysis_service.dart';
 import 'package:vital_step/ui/views/test_taking/test_taking_view.dart';
 import 'package:vital_step/ui/views/test_result/test_result_view.dart';
 import 'package:vital_step/ui/views/assessment_detail/assessment_detail_view.dart';
@@ -35,6 +36,7 @@ import 'package:vital_step/services/specialist_service.dart';
 import 'package:vital_step/ui/dialogs/create_assessment/create_assessment_dialog.dart';
 import 'package:vital_step/ui/dialogs/add_comment/add_comment_dialog.dart';
 import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.dart';
+import 'package:vital_step/ui/views/compare/compare_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -62,6 +64,7 @@ import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.d
     MaterialRoute(page: HomeTabSpecialistView),
     MaterialRoute(page: AccountSpecialistView),
     MaterialRoute(page: SignUpSpecialistView),
+    MaterialRoute(page: CompareView),
 // @stacked-route
   ],
   dependencies: [
@@ -69,6 +72,7 @@ import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.d
     LazySingleton(classType: DialogService),
     LazySingleton(classType: NavigationService),
     LazySingleton(classType: LoginService),
+    LazySingleton(classType: AnalysisService),
     LazySingleton(classType: AccountsService),
     LazySingleton(classType: ApiCallsService),
     LazySingleton(classType: NotificationsService),

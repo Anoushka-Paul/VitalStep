@@ -5,6 +5,7 @@ import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.logger.dart';
 import 'package:vital_step/services/accounts_service.dart';
 import 'package:vital_step/services/login_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AccountViewModel extends BaseViewModel {
   final _logger = getLogger("AccountViewModel");
@@ -47,5 +48,16 @@ class AccountViewModel extends BaseViewModel {
     response!.confirmed
         ? await _accountService.deleteAccount()
         : _logger.i('User cancelled');
+  }
+
+  Future<void> contactSupport() async {
+    const phoneNumber = "916396116270"; // Vital Step support number
+    const message = "Hello Vital Step Support, I need help with...";
+    final url = Uri.parse("https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}");
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      _logger.e("Could not launch WhatsApp: $e");
+    }
   }
 }

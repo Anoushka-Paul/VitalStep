@@ -57,7 +57,7 @@ class ApiCallsService {
     return assessments;
   }
 
-  Future<Test> getLastTest() async {
+  Future<List<Test>> getAllUserTests() async {
     final userId = await _loginService.getUserId();
     final cookie = box.read('cookie');
     final Headers headers = {'accept': 'application/json', "cookie": cookie};
@@ -66,17 +66,24 @@ class ApiCallsService {
       headers: headers,
     );
     _logger.i(response.body);
-    List<Test> tests = [];
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      tests = data.map((e) => Test.fromJson(e)).toList();
-      _logger.i("Tests fetched successfully $tests");
+      final tests = data.map((e) => Test.fromJson(e)).toList();
       tests.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      return tests.last;
+      return tests;
     } else {
       _logger.e("Error in fetching tests");
-      throw Exception(
-          "Error in fetching tests, status code: ${response.statusCode}");
+      // Return empty list instead of throwing to avoid crashing UI if endpoint fails
+      return [];
+    }
+  }
+
+  Future<Test> getLastTest() async {
+    final tests = await getAllUserTests();
+    if (tests.isNotEmpty) {
+      return tests.last;
+    } else {
+      throw Exception("No tests found");
     }
   }
 
@@ -108,11 +115,20 @@ class ApiCallsService {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
 
-      Map<String, Test> handsValues;
-      handsValues = {
-        "Left": Test.fromJson(data["Left"][0]),
-        "Right": Test.fromJson(data["Right"][0])
-      };
+      Map<String, Test?> handsValues = {};
+      
+      if (data["Left"] != null && data["Left"].isNotEmpty) {
+        handsValues["Left"] = Test.fromJson(data["Left"][0]);
+      } else {
+        handsValues["Left"] = null;
+      }
+      
+      if (data["Right"] != null && data["Right"].isNotEmpty) {
+        handsValues["Right"] = Test.fromJson(data["Right"][0]);
+      } else {
+        handsValues["Right"] = null;
+      }
+
       return handsValues;
     } else {
       _logger.e(

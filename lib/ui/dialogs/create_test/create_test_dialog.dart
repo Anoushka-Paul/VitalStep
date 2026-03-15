@@ -28,13 +28,18 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
     CreateTestDialogModel viewModel,
     Widget? child,
   ) {
-    final Assessment assessment = Assessment.fromJson(request.data);
-    print(assessment);
+    dynamic data = request.data;
+    Assessment assessment;
+    if (data is Map<String, dynamic> && data.containsKey('assessment')) {
+      assessment = Assessment.fromJson(data['assessment']);
+    } else {
+      assessment = Assessment.fromJson(data);
+    }
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        padding: const EdgeInsets.all(25),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -131,44 +136,144 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
                 }
               },
             ),
-            GestureDetector(
-              onTap: () async {
-                // Simple validation
-                if (viewModel.hand == null || viewModel.deviceId == null) {
-                  Fluttertoast.showToast(msg: "Please select hand and device");
-                } else {
-                  final testResponse = await viewModel.createTest(
-                      assessment, viewModel.hand!, viewModel.deviceId!);
-                  if (testResponse) {
-                    completer(DialogResponse(confirmed: true));
-                    NavigationService()
-                        .navigateToTestTakingView(assessment: assessment);
-                  }
-                }
-              },
-              child: Container(
-                height: 50,
-                width: double.infinity,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: viewModel.isBusy
-                    ? const CircularProgressIndicator()
-                    : const Text(
-                        'Start Test',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
+                  verticalSpaceMedium,
+            const Text(
+              'Patient Details',
+              style: TextStyle(
+                fontSize: 16,
+                color: kcMediumGrey,
+                fontWeight: FontWeight.w600,
               ),
+            ),
+            verticalSpaceSmall,
+            _buildTextField(
+              controller: viewModel.patientNameController,
+              label: "Patient Name",
+              icon: Icons.person,
+            ),
+            verticalSpaceSmall,
+            _buildTextField(
+              controller: viewModel.ageController,
+              label: "Age",
+              icon: Icons.calendar_today,
+              inputType: TextInputType.number,
+            ),
+            verticalSpaceSmall,
+            _buildTextField(
+              controller: viewModel.purposeController,
+              label: "Purpose of Test",
+              icon: Icons.note_alt_outlined,
+              hint: "e.g. Weekly Checkup, Recovery Monitoring",
+            ),
+            verticalSpaceLarge,
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => completer(DialogResponse(confirmed: false)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      side: const BorderSide(color: kcMediumGrey),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(color: kcDarkGreyColor)),
+                  ),
+                ),
+                horizontalSpaceSmall,
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (viewModel.hand == null || viewModel.deviceId == null) {
+                        Fluttertoast.showToast(msg: "Please select hand and device");
+                        return;
+                      }
+                      if (viewModel.patientNameController.text.isEmpty ||
+                          viewModel.ageController.text.isEmpty ||
+                          viewModel.purposeController.text.isEmpty) {
+                        Fluttertoast.showToast(msg: "Please fill all patient details");
+                        return;
+                      }
+
+                      // Save details locally since API doesn't support them yet
+                      viewModel.savePatientDetails();
+
+                      final testResponse = await viewModel.createTest(
+                          assessment, viewModel.hand!, viewModel.deviceId!);
+                      if (testResponse) {
+                        completer(DialogResponse(confirmed: true));
+                        NavigationService()
+                            .navigateToTestTakingView(assessment: assessment);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kcPrimaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15.0),
+                      ),
+                      elevation: 5,
+                    ),
+                    child: viewModel.isBusy
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text(
+                            'Start Test',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    String? hint,
+    TextInputType inputType = TextInputType.text,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: inputType,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: kcMediumGrey),
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: kcPrimaryColor),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHandOption(BuildContext context, CreateTestDialogModel viewModel,
+      String hand, IconData icon) {
+    return Row(
+      children: [
+        Checkbox(
+            value: viewModel.hand == hand ? true : false,
+            onChanged: (val) {
+              viewModel.hand = hand;
+              viewModel.rebuildUi();
+            }),
+        horizontalSpaceSmall,
+        Text(hand),
+      ],
     );
   }
 
@@ -177,6 +282,11 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
       CreateTestDialogModel();
   @override
   void onViewModelReady(CreateTestDialogModel viewModel) async {
-    viewModel.devicesFuture = viewModel.init();
+    String? hand;
+    if (request.data is Map<String, dynamic> &&
+        (request.data as Map<String, dynamic>).containsKey('hand')) {
+      hand = (request.data as Map<String, dynamic>)['hand'];
+    }
+    viewModel.devicesFuture = viewModel.init(preSelectedHand: hand);
   }
 }

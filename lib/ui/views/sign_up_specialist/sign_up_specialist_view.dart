@@ -42,154 +42,214 @@ class SignUpSpecialistView extends StackedView<SignUpSpecialistViewModel>
     SignUpSpecialistViewModel viewModel,
     Widget? child,
   ) {
-    final bool update = profile != null;
+    final bool update = this.profile != null;
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Container(
-        padding: const EdgeInsets.only(left: 25.0, right: 25.0),
-        child: Form(
-            key: viewModel.formKey,
-            child: ListView(
-              children: [
-                SignUpHeader(update: update),
-                TextFormField(
-                  controller: nameController,
-                  decoration: inputStyle.copyWith(labelText: 'Name[Required]'),
-                  validator: FormValidators.nameValidator,
-                ),
-                verticalSpaceSmall,
-
-                const Text('CountryCode [Required] '),
-                DropdownButton<String>(
-                  key: const ValueKey('countryCodesDropDownField'),
-                  value: viewModel.countryCodeDropDownValue,
-                  onChanged: (value) {
-                    viewModel.setCountryCodeDropDown(value!);
-                  },
-                  isExpanded: true,
-                  items: CountryCodeDropDownValueToTitleMap.keys
-                      .map(
-                        (value) => DropdownMenuItem<String>(
-                          key: ValueKey('$value key'),
-                          value: value,
-                          child:
-                              Text(CountryCodeDropDownValueToTitleMap[value]!),
-                        ),
-                      )
-                      .toList(),
-                ),
-
-                verticalSpaceSmall,
-                TextFormField(
-                  controller: mobileNumberController,
-                  decoration: inputStyle.copyWith(
-                      labelText: 'Mobile Number [Required]'),
-                  keyboardType: TextInputType.phone,
-                  validator: FormValidators.mobileNumberValidator,
-                  enabled: profile == null ? true : false,
-                ),
-                verticalSpaceSmall,
-                TextFormField(
-                  controller: emailController,
-                  decoration:
-                      inputStyle.copyWith(labelText: 'Email [Required]'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: FormValidators.emailValidator,
-                  enabled: profile == null ? true : false,
-                ),
-                verticalSpaceSmall,
-                update
-                    ? const SizedBox()
-                    : TextFormField(
-                        controller: passwordController,
-                        decoration: InputDecoration(
-                            labelText: 'Password [Required]',
-                            border: InputBorder.none,
-                            fillColor: Colors.grey[200],
-                            filled: true,
-                            suffixIcon: IconButton(
-                              icon: Icon(viewModel.passwordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off),
-                              onPressed: () {
-                                viewModel.passwordVisible =
-                                    !viewModel.passwordVisible;
-                                viewModel.rebuildUi();
-                              },
-                            )),
-                        obscureText: viewModel.passwordVisible,
-                        validator: FormValidators.passwordValidator,
-                      ),
-                verticalSpaceSmall,
-                TextFormField(
-                  controller: viewModel.viewDobController,
-                  decoration:
-                      inputStyle.copyWith(labelText: 'Date of Birth[Required]'),
-                  readOnly: true,
-                  onTap: () async {
-                    viewModel.setDOB(context);
-                  },
-                ),
-                verticalSpaceSmall,
-                // city
-                TextFormField(
-                  controller: cityController,
-                  decoration: inputStyle.copyWith(labelText: 'City'),
-                ),
-                verticalSpaceSmall,
-                // pincode
-                TextFormField(
-                  controller: pincodeController,
-                  decoration: inputStyle.copyWith(labelText: 'pincode'),
-                  keyboardType: TextInputType.number,
-                ),
-                verticalSpaceSmall,
-                TextFormField(
-                  controller: countryController,
-                  decoration: inputStyle.copyWith(labelText: 'Country'),
-                ),
-                verticalSpaceSmall,
-
-                InkWell(
-                  onTap: () async {
-                    if (viewModel.isBusy) {
-                      return;
-                    }
-                    if (profile == null) {
-                      await viewModel.saveData(update: false);
-                    } else if (profile != null) {
-                      await viewModel.saveData(update: true);
-                    }
-                  },
-                  child: Container(
-                    height: 55,
-                    margin: const EdgeInsets.only(top: 30),
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: kcPrimaryColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: viewModel.isBusy
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
-                          )
-                        : Center(
-                            child: Text(
-                              profile == null ? "Sign Up" : 'Update',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                  ),
-                ),
-                verticalSpaceSmall,
-                profile == null ? const SignUpBottom() : const SizedBox()
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: kcDarkGreyColor, size: 20),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          update ? "Edit Specialist Profile" : "Specialist Registration",
+          style: const TextStyle(color: kcDarkGreyColor, fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Form(
+        key: viewModel.formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!update) ...[
+                const Text("Join as Specialist", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
+                const SizedBox(height: 8),
+                const Text("Help patients manage their health better.", style: TextStyle(fontSize: 15, color: kcMediumGrey)),
+                const SizedBox(height: 32),
               ],
-            )),
+              
+              _buildSectionTitle("Professional Details"),
+              _buildField("Full Name", nameController, "Dr. Smith", validator: FormValidators.nameValidator),
+              _buildPhoneField(viewModel),
+              _buildField("Email Address", emailController, "specialist@example.com", 
+                  keyboardType: TextInputType.emailAddress, 
+                  validator: FormValidators.emailValidator,
+                  enabled: this.profile == null),
+              
+              if (!update) ...[
+                const SizedBox(height: 8),
+                _buildPasswordField(viewModel),
+              ],
+              
+              const SizedBox(height: 32),
+              _buildSectionTitle("Personal Details"),
+              _buildField("Date of Birth", viewModel.viewDobController, "Select Date", readOnly: true, onTap: () => viewModel.setDOB(context)),
+              
+              const SizedBox(height: 32),
+              _buildSectionTitle("Location"),
+              Row(
+                children: [
+                  Expanded(child: _buildField("City", cityController, "City")),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField("Pincode", pincodeController, "123456", keyboardType: TextInputType.number)),
+                ],
+              ),
+              _buildField("Country", countryController, "Country"),
+
+              const SizedBox(height: 48),
+              _buildSubmitButton(viewModel, update),
+              const SizedBox(height: 24),
+              if (profile == null) const SignUpBottom(),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: kcSecondaryColor)),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller, String hint, 
+      {TextInputType? keyboardType, String? Function(String?)? validator, bool enabled = true, bool readOnly = false, VoidCallback? onTap}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
+        ),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          readOnly: readOnly,
+          onTap: onTap,
+          keyboardType: keyboardType,
+          validator: validator,
+          decoration: premiumInputDecoration(hint),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildPhoneField(SignUpSpecialistViewModel vm) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text("Mobile Number", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
+        ),
+        Row(
+          children: [
+            SizedBox(
+              width: 100,
+              child: DropdownButtonFormField<String>(
+                value: vm.countryCodeDropDownValue,
+                decoration: premiumInputDecoration("").copyWith(contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 18)),
+                onChanged: (val) => vm.setCountryCodeDropDown(val!),
+                items: CountryCodeDropDownValueToTitleMap.keys
+                    .map((val) => DropdownMenuItem(value: val, child: Text(CountryCodeDropDownValueToTitleMap[val]!, style: const TextStyle(fontSize: 14))))
+                    .toList(),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextFormField(
+                controller: mobileNumberController,
+                keyboardType: TextInputType.phone,
+                validator: FormValidators.mobileNumberValidator,
+                enabled: this.profile == null,
+                decoration: premiumInputDecoration("Phone Number"),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  Widget _buildPasswordField(SignUpSpecialistViewModel vm) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text("Password", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
+        ),
+        TextFormField(
+          controller: passwordController,
+          obscureText: !vm.passwordVisible,
+          validator: FormValidators.passwordValidator,
+          decoration: premiumInputDecoration("••••••••").copyWith(
+            suffixIcon: IconButton(
+              icon: Icon(vm.passwordVisible ? Icons.visibility : Icons.visibility_off, color: kcMediumGrey),
+              onPressed: () {
+                vm.passwordVisible = !vm.passwordVisible;
+                vm.rebuildUi();
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration premiumInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: kcLightGrey, fontSize: 14),
+      fillColor: const Color(0xFFF9FAFB),
+      filled: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: kcSecondaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+      ),
+    );
+  }
+
+  Widget _buildSubmitButton(SignUpSpecialistViewModel vm, bool update) {
+    return InkWell(
+      onTap: () async {
+        if (vm.isBusy) return;
+        await vm.saveData(update: update);
+      },
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          color: kcSecondaryColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: kcSecondaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))],
+        ),
+        child: Center(
+          child: vm.isBusy
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(update ? "Save Changes" : "Register Now", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 17)),
+        ),
       ),
     );
   }

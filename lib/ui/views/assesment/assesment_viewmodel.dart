@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
@@ -11,7 +12,9 @@ import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
 import 'package:vital_step/services/accounts_service.dart';
 import 'package:vital_step/services/api_calls_service.dart';
+import 'package:vital_step/services/api_calls_service.dart';
 import 'package:vital_step/services/specialist_service.dart';
+import 'package:get_storage/get_storage.dart';
 
 class AssesmentViewModel extends BaseViewModel {
   final _dialogService = locator<DialogService>();
@@ -21,10 +24,26 @@ class AssesmentViewModel extends BaseViewModel {
   int? patientUserId;
   bool? isSpecialist;
   late Future<List<Assessment>?> devicesFuture;
+
+  Timer? _pollingTimer;
+
   Future<List<Assessment>?> init() async {
     final assessments = await _apiCallsService.getAllUserAssessments(
         patientUserId: patientUserId);
+    
+    // Start polling if not already started
+    _pollingTimer ??= Timer.periodic(const Duration(seconds: 10), (timer) async {
+       devicesFuture = _apiCallsService.getAllUserAssessments(patientUserId: patientUserId);
+       notifyListeners();
+    });
+    
     return assessments;
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> takeTest(Assessment assessment) async {
@@ -35,8 +54,18 @@ class AssesmentViewModel extends BaseViewModel {
     // if the queue is empty, then give a popup and create a test
     if (assessmentQueue.isEmpty) {
       // show a popup that the queue is empty.
+      final _box = GetStorage();
+      String? preSelectedHand = _box.read("preSelectedHand");
+
+      Map<String, dynamic> dialogData = {
+        'assessment': assessment.toJson(),
+      };
+      if (preSelectedHand != null) {
+        dialogData['hand'] = preSelectedHand;
+      }
+
       await _dialogService.showCustomDialog(
-          variant: DialogType.createTest, data: assessment.toJson());
+          variant: DialogType.createTest, data: dialogData);
       setBusy(false);
 
       devicesFuture = init();
@@ -87,5 +116,19 @@ class AssesmentViewModel extends BaseViewModel {
       Fluttertoast.showToast(msg: "Assessment not deleted");
     }
     rebuildUi();
+  }
+
+  Future<void> createSelfAssessment() async {
+    final DialogService dialogService = locator<DialogService>();
+    await dialogService.showCustomDialog(
+        variant: DialogType.createAssessment,
+        data: patientUserId);
+    devicesFuture = init();
+    rebuildUi();
+  }
+
+  void navigateToGlobalHistory() {
+    // Navigate to the Assessments list — user can then tap into any assessment's history
+    NavigationService().navigateTo(Routes.assesmentView);
   }
 }

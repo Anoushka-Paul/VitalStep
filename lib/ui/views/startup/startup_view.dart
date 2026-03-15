@@ -16,33 +16,78 @@ class StartupView extends StackedView<StartupViewModel> {
     Widget? child,
   ) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            'assets/Logo.jpeg',
-            width: 150,
-            height: 150,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.white, Color(0xFFF0F4F8)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          verticalSpaceSmall,
-          const Center(
-            child: Text(
-              'Vital Step',
-              style: TextStyle(
-                // letterSpacing: 5,
-                fontSize: 30,
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: kcPrimaryColor.withOpacity(0.12),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/Logo.jpeg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: kcPrimaryColor.withOpacity(0.1),
+                        child: const Icon(Icons.health_and_safety_rounded, color: kcPrimaryColor, size: 60),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 48),
+              const Text(
+                'VITALSTEP',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  color: kcPrimaryColor,
+                  letterSpacing: 4,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'PRECISION IN MOTION',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: kcMediumGrey,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 80),
+              const SizedBox(
+                width: 28,
+                height: 28,
+                child: CircularProgressIndicator(
+                  color: kcPrimaryColor,
+                  strokeWidth: 3,
+                ),
+              ),
+            ],
           ),
-          verticalSpaceMedium,
-          Center(
-            child: const CircularProgressIndicator(
-              color: kcPrimaryColor,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

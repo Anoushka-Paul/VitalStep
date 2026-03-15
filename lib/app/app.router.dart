@@ -5,14 +5,14 @@
 // **************************************************************************
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:flutter/material.dart' as _i24;
+import 'package:flutter/material.dart' as _i25;
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart' as _i1;
-import 'package:stacked_services/stacked_services.dart' as _i29;
-import 'package:vital_step/Model/accounts.dart' as _i26;
-import 'package:vital_step/Model/Assessment.dart' as _i27;
-import 'package:vital_step/Model/profile.dart' as _i25;
-import 'package:vital_step/Model/spcialist_profile.dart' as _i28;
+import 'package:stacked_services/stacked_services.dart' as _i30;
+import 'package:vital_step/Model/accounts.dart' as _i27;
+import 'package:vital_step/Model/Assessment.dart' as _i28;
+import 'package:vital_step/Model/profile.dart' as _i26;
+import 'package:vital_step/Model/spcialist_profile.dart' as _i29;
 import 'package:vital_step/ui/views/account/account_view.dart' as _i9;
 import 'package:vital_step/ui/views/account_specialist/account_specialist_view.dart'
     as _i22;
@@ -21,6 +21,7 @@ import 'package:vital_step/ui/views/assessment_detail/assessment_detail_view.dar
     as _i17;
 import 'package:vital_step/ui/views/assessment_history/assessment_history_view.dart'
     as _i18;
+import 'package:vital_step/ui/views/compare/compare_view.dart' as _i24;
 import 'package:vital_step/ui/views/dashboard/dashboard_view.dart' as _i6;
 import 'package:vital_step/ui/views/device/device_view.dart' as _i13;
 import 'package:vital_step/ui/views/faq/faq_view.dart' as _i11;
@@ -89,6 +90,8 @@ class Routes {
 
   static const signUpSpecialistView = '/sign-up-specialist-view';
 
+  static const compareView = '/compare-view';
+
   static const all = <String>{
     homeView,
     startupView,
@@ -112,6 +115,7 @@ class Routes {
     homeTabSpecialistView,
     accountSpecialistView,
     signUpSpecialistView,
+    compareView,
   };
 }
 
@@ -205,6 +209,10 @@ class StackedRouter extends _i1.RouterBase {
       Routes.signUpSpecialistView,
       page: _i23.SignUpSpecialistView,
     ),
+    _i1.RouteDef(
+      Routes.compareView,
+      page: _i24.CompareView,
+    ),
   ];
 
   final _pagesMap = <Type, _i1.StackedRouteFactory>{
@@ -212,13 +220,14 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<HomeViewArguments>(
         orElse: () => const HomeViewArguments(),
       );
-      return _i24.MaterialPageRoute<dynamic>(
-        builder: (context) => const _i2.HomeView(),
+      return _i25.MaterialPageRoute<dynamic>(
+        builder: (context) =>
+            _i2.HomeView(key: args.key, firstPage: args.firstPage),
         settings: data,
       );
     },
     _i3.StartupView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i3.StartupView(),
         settings: data,
       );
@@ -227,7 +236,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<LoginViewArguments>(
         orElse: () => const LoginViewArguments(),
       );
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => _i4.LoginView(key: args.key),
         settings: data,
       );
@@ -236,20 +245,20 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<SignUpViewArguments>(
         orElse: () => const SignUpViewArguments(),
       );
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i5.SignUpView(key: args.key, profile: args.profile),
         settings: data,
       );
     },
     _i6.DashboardView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i6.DashboardView(),
         settings: data,
       );
     },
     _i7.ReportView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i7.ReportView(),
         settings: data,
       );
@@ -258,7 +267,7 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<AssesmentViewArguments>(
         orElse: () => const AssesmentViewArguments(),
       );
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => _i8.AssesmentView(
             key: args.key,
             isSpecialist: args.isSpecialist,
@@ -267,60 +276,60 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i9.AccountView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i9.AccountView(),
         settings: data,
       );
     },
     _i10.HomeTabView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i10.HomeTabView(),
         settings: data,
       );
     },
     _i11.FaqView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i11.FaqView(),
         settings: data,
       );
     },
     _i12.PrivacyPolicyView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i12.PrivacyPolicyView(),
         settings: data,
       );
     },
     _i13.DeviceView: (data) {
       final args = data.getArgs<DeviceViewArguments>(nullOk: false);
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => _i13.DeviceView(
             key: args.key, showExistingDevices: args.showExistingDevices),
         settings: data,
       );
     },
     _i14.KillAppView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i14.KillAppView(),
         settings: data,
       );
     },
     _i15.TestTakingView: (data) {
       final args = data.getArgs<TestTakingViewArguments>(nullOk: false);
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i15.TestTakingView(key: args.key, assessment: args.assessment),
         settings: data,
       );
     },
     _i16.TestResultView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i16.TestResultView(),
         settings: data,
       );
     },
     _i17.AssessmentDetailView: (data) {
       final args = data.getArgs<AssessmentDetailViewArguments>(nullOk: false);
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => _i17.AssessmentDetailView(
             key: args.key,
             assessment: args.assessment,
@@ -331,7 +340,7 @@ class StackedRouter extends _i1.RouterBase {
     },
     _i18.AssessmentHistoryView: (data) {
       final args = data.getArgs<AssessmentHistoryViewArguments>(nullOk: false);
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => _i18.AssessmentHistoryView(
             key: args.key,
             assessment: args.assessment,
@@ -340,25 +349,25 @@ class StackedRouter extends _i1.RouterBase {
       );
     },
     _i19.PasswordResetViewView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i19.PasswordResetViewView(),
         settings: data,
       );
     },
     _i20.HomeSpecialistView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i20.HomeSpecialistView(),
         settings: data,
       );
     },
     _i21.HomeTabSpecialistView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i21.HomeTabSpecialistView(),
         settings: data,
       );
     },
     _i22.AccountSpecialistView: (data) {
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) => const _i22.AccountSpecialistView(),
         settings: data,
       );
@@ -367,9 +376,15 @@ class StackedRouter extends _i1.RouterBase {
       final args = data.getArgs<SignUpSpecialistViewArguments>(
         orElse: () => const SignUpSpecialistViewArguments(),
       );
-      return _i24.MaterialPageRoute<dynamic>(
+      return _i25.MaterialPageRoute<dynamic>(
         builder: (context) =>
             _i23.SignUpSpecialistView(key: args.key, profile: args.profile),
+        settings: data,
+      );
+    },
+    _i24.CompareView: (data) {
+      return _i25.MaterialPageRoute<dynamic>(
+        builder: (context) => const _i24.CompareView(),
         settings: data,
       );
     },
@@ -388,7 +403,7 @@ class HomeViewArguments {
     this.firstPage,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
   final int? firstPage;
 
@@ -412,7 +427,7 @@ class HomeViewArguments {
 class LoginViewArguments {
   const LoginViewArguments({this.key});
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
   @override
   String toString() {
@@ -437,9 +452,9 @@ class SignUpViewArguments {
     this.profile,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
-  final _i25.Profile? profile;
+  final _i26.Profile? profile;
 
   @override
   String toString() {
@@ -465,11 +480,11 @@ class AssesmentViewArguments {
     this.patientAccount,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
   final bool? isSpecialist;
 
-  final _i26.Accounts? patientAccount;
+  final _i27.Accounts? patientAccount;
 
   @override
   String toString() {
@@ -496,7 +511,7 @@ class DeviceViewArguments {
     required this.showExistingDevices,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
   final bool showExistingDevices;
 
@@ -523,9 +538,9 @@ class TestTakingViewArguments {
     required this.assessment,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
-  final _i27.Assessment assessment;
+  final _i28.Assessment assessment;
 
   @override
   String toString() {
@@ -552,9 +567,9 @@ class AssessmentDetailViewArguments {
     this.isSpecialist,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
-  final _i27.Assessment assessment;
+  final _i28.Assessment assessment;
 
   final int? patientUserId;
 
@@ -590,9 +605,9 @@ class AssessmentHistoryViewArguments {
     this.patientId,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
-  final _i27.Assessment assessment;
+  final _i28.Assessment assessment;
 
   final int? patientId;
 
@@ -621,9 +636,9 @@ class SignUpSpecialistViewArguments {
     this.profile,
   });
 
-  final _i24.Key? key;
+  final _i25.Key? key;
 
-  final _i28.ProfileSpecialist? profile;
+  final _i29.ProfileSpecialist? profile;
 
   @override
   String toString() {
@@ -642,9 +657,9 @@ class SignUpSpecialistViewArguments {
   }
 }
 
-extension NavigatorStateExtension on _i29.NavigationService {
+extension NavigatorStateExtension on _i30.NavigationService {
   Future<dynamic> navigateToHomeView({
-    _i24.Key? key,
+    _i25.Key? key,
     int? firstPage,
     int? routerId,
     bool preventDuplicates = true,
@@ -675,7 +690,7 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToLoginView({
-    _i24.Key? key,
+    _i25.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -691,8 +706,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToSignUpView({
-    _i24.Key? key,
-    _i25.Profile? profile,
+    _i25.Key? key,
+    _i26.Profile? profile,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -736,9 +751,9 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToAssesmentView({
-    _i24.Key? key,
+    _i25.Key? key,
     bool? isSpecialist,
-    _i26.Accounts? patientAccount,
+    _i27.Accounts? patientAccount,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -813,7 +828,7 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToDeviceView({
-    _i24.Key? key,
+    _i25.Key? key,
     required bool showExistingDevices,
     int? routerId,
     bool preventDuplicates = true,
@@ -845,8 +860,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToTestTakingView({
-    _i24.Key? key,
-    required _i27.Assessment assessment,
+    _i25.Key? key,
+    required _i28.Assessment assessment,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -876,8 +891,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToAssessmentDetailView({
-    _i24.Key? key,
-    required _i27.Assessment assessment,
+    _i25.Key? key,
+    required _i28.Assessment assessment,
     int? patientUserId,
     bool? isSpecialist,
     int? routerId,
@@ -899,8 +914,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToAssessmentHistoryView({
-    _i24.Key? key,
-    required _i27.Assessment assessment,
+    _i25.Key? key,
+    required _i28.Assessment assessment,
     int? patientId,
     int? routerId,
     bool preventDuplicates = true,
@@ -974,8 +989,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> navigateToSignUpSpecialistView({
-    _i24.Key? key,
-    _i28.ProfileSpecialist? profile,
+    _i25.Key? key,
+    _i29.ProfileSpecialist? profile,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -990,8 +1005,22 @@ extension NavigatorStateExtension on _i29.NavigationService {
         transition: transition);
   }
 
+  Future<dynamic> navigateToCompareView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return navigateTo<dynamic>(Routes.compareView,
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
   Future<dynamic> replaceWithHomeView({
-    _i24.Key? key,
+    _i25.Key? key,
     int? firstPage,
     int? routerId,
     bool preventDuplicates = true,
@@ -1022,7 +1051,7 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithLoginView({
-    _i24.Key? key,
+    _i25.Key? key,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1038,8 +1067,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithSignUpView({
-    _i24.Key? key,
-    _i25.Profile? profile,
+    _i25.Key? key,
+    _i26.Profile? profile,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1083,9 +1112,9 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithAssesmentView({
-    _i24.Key? key,
+    _i25.Key? key,
     bool? isSpecialist,
-    _i26.Accounts? patientAccount,
+    _i27.Accounts? patientAccount,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1160,7 +1189,7 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithDeviceView({
-    _i24.Key? key,
+    _i25.Key? key,
     required bool showExistingDevices,
     int? routerId,
     bool preventDuplicates = true,
@@ -1192,8 +1221,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithTestTakingView({
-    _i24.Key? key,
-    required _i27.Assessment assessment,
+    _i25.Key? key,
+    required _i28.Assessment assessment,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1223,8 +1252,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithAssessmentDetailView({
-    _i24.Key? key,
-    required _i27.Assessment assessment,
+    _i25.Key? key,
+    required _i28.Assessment assessment,
     int? patientUserId,
     bool? isSpecialist,
     int? routerId,
@@ -1246,8 +1275,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithAssessmentHistoryView({
-    _i24.Key? key,
-    required _i27.Assessment assessment,
+    _i25.Key? key,
+    required _i28.Assessment assessment,
     int? patientId,
     int? routerId,
     bool preventDuplicates = true,
@@ -1321,8 +1350,8 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }
 
   Future<dynamic> replaceWithSignUpSpecialistView({
-    _i24.Key? key,
-    _i28.ProfileSpecialist? profile,
+    _i25.Key? key,
+    _i29.ProfileSpecialist? profile,
     int? routerId,
     bool preventDuplicates = true,
     Map<String, String>? parameters,
@@ -1331,6 +1360,20 @@ extension NavigatorStateExtension on _i29.NavigationService {
   }) async {
     return replaceWith<dynamic>(Routes.signUpSpecialistView,
         arguments: SignUpSpecialistViewArguments(key: key, profile: profile),
+        id: routerId,
+        preventDuplicates: preventDuplicates,
+        parameters: parameters,
+        transition: transition);
+  }
+
+  Future<dynamic> replaceWithCompareView([
+    int? routerId,
+    bool preventDuplicates = true,
+    Map<String, String>? parameters,
+    Widget Function(BuildContext, Animation<double>, Animation<double>, Widget)?
+        transition,
+  ]) async {
+    return replaceWith<dynamic>(Routes.compareView,
         id: routerId,
         preventDuplicates: preventDuplicates,
         parameters: parameters,

@@ -29,165 +29,246 @@ class DeviceView extends StackedView<DeviceViewModel> with $DeviceView {
     DeviceViewModel viewModel,
     Widget? child,
   ) {
-    final inputStyle = InputDecoration(
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0), // Add border radius
-          borderSide: BorderSide.none, // Remove the default border
-        ),
-        fillColor: Colors.grey[200],
-        filled: true);
-
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: kcBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text('Vital Step'),
+        title: const Text(
+          'Device Pairing',
+          style: TextStyle(color: kcDarkGreyColor, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: kcDarkGreyColor),
       ),
-      body: Container(
-        padding: const EdgeInsets.only(left: 50.0, right: 50.0),
-        child: ListView(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(25.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            verticalSpaceMedium,
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                verticalSpaceMedium,
-                const Text(
-                  "Existing Devices",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: kcMediumGrey,
-                  ),
-                ),
-                verticalSpaceSmall,
-                FutureBuilder<List<Device>?>(
-                  future: viewModel.devicesFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox(
-                        height: 200,
-                        child: Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    } else if (snapshot.hasError) {
-                      return const Text("Error fetching devices");
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Text("No devices found");
-                    } else {
-                      final devices = snapshot.data!;
-                      return SizedBox(
-                        height: 200,
-                        child: ListView.builder(
-                            itemCount: devices.length,
-                            itemBuilder:
-                                (BuildContext buildContext, int index) {
-                              return ListTile(
-                                leading: Text((index + 1).toString()),
-                                title: Text(devices[index].deviceName),
-                                subtitle: Text(devices[index].deviceCode),
-                              );
-                            }),
-                      );
-                    }
-                  },
-                ),
-                verticalSpaceSmall,
-              ],
+            _buildSectionTitle("Connected Devices"),
+            verticalSpaceSmall,
+            FutureBuilder<List<Device>?>(
+              future: viewModel.devicesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError ||
+                    !snapshot.hasData ||
+                    snapshot.data!.isEmpty) {
+                  return _buildEmptyState();
+                } else {
+                  final devices = snapshot.data!;
+                  return ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: devices.length,
+                    separatorBuilder: (c, i) => verticalSpaceSmall,
+                    itemBuilder: (context, index) => _buildDeviceCard(devices[index], index),
+                  );
+                }
+              },
             ),
+            verticalSpaceMedium,
+            const Divider(),
             verticalSpaceMedium,
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Add Device',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: kcMediumGrey,
-                  ),
-                ),
-                Spacer(),
-                TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Dialog(
-                            child: Image.asset(
-                              "assets/pair.png",
-                              width: 150,
-                              height: 150,
+                _buildSectionTitle("Add New Device"),
+                TextButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return Dialog(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text("Pairing Instructions", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                verticalSpaceMedium,
+                                Image.asset(
+                                  "assets/pair.png",
+                                  width: 150,
+                                  height: 150,
+                                ),
+                                verticalSpaceMedium,
+                                const Text("Enter the code displayed on your device screen."),
+                              ],
                             ),
-                          );
-                        },
-                      );
-                    },
-                    child: Text("Help"))
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  icon: const Icon(Icons.help_outline, color: kcPrimaryColor),
+                  label: const Text("Help", style: TextStyle(color: kcPrimaryColor)),
+                )
               ],
             ),
-            verticalSpaceMedium,
-            TextFormField(
+            verticalSpaceSmall,
+            _buildInputCard(
               controller: deviceCodeController,
-              decoration: inputStyle.copyWith(
-                labelText: 'Device Code',
-              ),
+              label: 'Device Code',
+              hint: 'Enter 6-digit code',
+              icon: Icons.qr_code,
             ),
             verticalSpaceSmall,
+            _buildInputCard(
+              controller: deviceNameController,
+              label: 'Device Name',
+              hint: 'e.g. My Left Hand Sensor',
+              icon: Icons.edit,
+            ),
+            verticalSpaceMedium,
             SizedBox(
-              width: screenWidth(context) * 0.5,
-              child: TextFormField(
-                controller: deviceNameController,
-                decoration: inputStyle.copyWith(
-                  labelText: 'Device Name',
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (viewModel.isBusy) return;
+                  await viewModel.saveDevice();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kcPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0),
+                  ),
+                  elevation: 5,
                 ),
+                child: viewModel.isBusy
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Pair Device',
+                        style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
               ),
-            ),
-            verticalSpaceSmall,
-            ElevatedButton(
-              onPressed: () async {
-                if (viewModel.isBusy) return;
-                await viewModel.saveDevice();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey.shade200,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-              ),
-              child: viewModel.isBusy
-                  ? const Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: CircularProgressIndicator(),
-                    )
-                  : const Text(
-                      'Save Device',
-                      style: TextStyle(color: Colors.black),
-                    ),
             ),
             verticalSpaceLarge,
-            ElevatedButton(
-              onPressed: () async {
-                final box = GetStorage();
-                await box.erase();
-                final NotificationsService notificationsService =
-                    locator<NotificationsService>();
-                await notificationsService.clearAllFutureNotifications();
-                NavigationService().navigateToStartupView();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey.shade200,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.0),
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  NavigationService().navigateToStartupView();
+                },
+                child: const Text(
+                  'Skip to Dashboard',
+                  style: TextStyle(color: kcMediumGrey, fontSize: 16),
                 ),
-              ),
-              child: const Text(
-                'Submit',
-                style: TextStyle(color: Colors.black),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+        color: kcDarkGreyColor,
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.devices_other, color: kcMediumGrey),
+          horizontalSpaceSmall,
+          Text("No devices paired yet", style: TextStyle(color: kcMediumGrey)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeviceCard(Device device, int index) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: kcPrimaryColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              (index + 1).toString(),
+              style: const TextStyle(color: kcPrimaryColor, fontWeight: FontWeight.bold),
+            ),
+          ),
+          horizontalSpaceMedium,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                device.deviceName,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              Text(
+                "Code: ${device.deviceCode}",
+                style: const TextStyle(color: kcMediumGrey, fontSize: 14),
+              ),
+            ],
+          ),
+          const Spacer(),
+          const Icon(Icons.check_circle, color: kcSuccessColor),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInputCard({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade100,
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          icon: Icon(icon, color: kcMediumGrey),
+          labelText: label,
+          hintText: hint,
+          border: InputBorder.none,
+          labelStyle: const TextStyle(color: kcMediumGrey),
         ),
       ),
     );

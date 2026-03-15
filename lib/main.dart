@@ -11,6 +11,7 @@ import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:vital_step/services/notifications_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -82,11 +83,27 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       initialRoute: initialRoute,
+      theme: _buildTheme(context),
       onGenerateRoute: StackedRouter().onGenerateRoute,
       navigatorKey: StackedService.navigatorKey,
       navigatorObservers: [
         StackedService.routeObserver,
       ],
     );
+  }
+
+  ThemeData _buildTheme(BuildContext context) {
+    try {
+      return ThemeData(
+        textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme),
+        primaryColor: const Color(0xFF1E88E5),
+      );
+    } catch (e) {
+      // Fallback to default theme if GoogleFonts fails (e.g. AssetManifest error)
+      debugPrint("GoogleFonts failed to load: $e. Falling back to system fonts.");
+      return ThemeData(
+        primaryColor: const Color(0xFF1E88E5),
+      );
+    }
   }
 }

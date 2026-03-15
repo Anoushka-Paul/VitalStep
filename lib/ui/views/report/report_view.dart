@@ -16,10 +16,7 @@ class ReportView extends StackedView<ReportViewModel> {
     ReportViewModel viewModel,
     Widget? child,
   ) {
-    String selectedOption = "Graph";
-    String selectedDateRange = "7 Days";
-    List<String> options = ["Graph", "Data", "Send"];
-    String? selectedPeriod;
+    final List<String> options = ["Graph", "Data"];
     final List<String> periods = ['7 days', '1 month', '6 months', 'custom'];
 
     // Sample data for the table
@@ -39,8 +36,8 @@ class ReportView extends StackedView<ReportViewModel> {
     DateTime? toDate;
     Future<void> _selectDate(BuildContext context, bool isFromDate) async {
       DateTime initialDate = isFromDate
-          ? (fromDate ?? DateTime.now())
-          : (toDate ?? DateTime.now());
+          ? (viewModel.fromDate ?? DateTime.now())
+          : (viewModel.toDate ?? DateTime.now());
       DateTime firstDate = DateTime(2000);
       DateTime lastDate = DateTime(2101);
 
@@ -50,13 +47,12 @@ class ReportView extends StackedView<ReportViewModel> {
         firstDate: firstDate,
         lastDate: lastDate,
       );
-      if (picked != null && picked != initialDate) {
+      if (picked != null) {
         if (isFromDate) {
-          fromDate = picked;
+          viewModel.setCustomDates(picked, viewModel.toDate ?? DateTime.now());
         } else {
-          toDate = picked;
+          viewModel.setCustomDates(viewModel.fromDate ?? DateTime.now(), picked);
         }
-        viewModel.notifyListeners();
       }
     }
 
@@ -67,16 +63,15 @@ class ReportView extends StackedView<ReportViewModel> {
           showBackButton: false,
         ),
         DropdownButton<String>(
-          value: selectedPeriod,
-          hint: Text('Select a period'),
+          value: viewModel.selectedPeriod,
+          hint: const Text('Select a period'),
           onChanged: (String? newValue) {
-            selectedPeriod = newValue;
-            viewModel.notifyListeners();
-
-            if (newValue == 'custom') {
-              // Handle the 'custom' option here
-              // For example, you could show a dialog to select a custom date range
-              showCustomDateRangeDialog(context);
+            if (newValue != null) {
+              if (newValue == 'custom') {
+                showCustomDateRangeDialog(context, viewModel);
+              } else {
+                viewModel.updatePeriod(newValue);
+              }
             }
           },
           items: periods.map<DropdownMenuItem<String>>((String value) {
@@ -91,21 +86,21 @@ class ReportView extends StackedView<ReportViewModel> {
           children: [
             ElevatedButton(
               onPressed: () => _selectDate(context, true),
-              child: Text(fromDate == null
+              child: Text(viewModel.fromDate == null
                   ? 'Select From Date'
-                  : 'From: ${fromDate.toString().split(' ')[0]}'),
+                  : 'From: ${viewModel.fromDate.toString().split(' ')[0]}'),
             ),
             ElevatedButton(
               onPressed: () => _selectDate(context, false),
-              child: Text(toDate == null
+              child: Text(viewModel.toDate == null
                   ? 'Select To Date'
-                  : 'To: ${toDate.toString().split(' ')[0]}'),
+                  : 'To: ${viewModel.toDate.toString().split(' ')[0]}'),
             ),
           ],
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 20),
+          margin: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               border: Border.all(width: 1, color: Colors.grey)),
@@ -114,15 +109,14 @@ class ReportView extends StackedView<ReportViewModel> {
             children: options.map((option) {
               return GestureDetector(
                 onTap: () {
-                  selectedOption = option;
-                  viewModel.rebuildUi();
+                  viewModel.updateSelectedOption(option);
                 },
                 child: Container(
                   height: 30,
                   width: ((MediaQuery.of(context).size.width - 42) /
                       options.length),
                   decoration: BoxDecoration(
-                    color: option == selectedOption
+                    color: option == viewModel.selectedOption
                         ? kcPrimaryColor
                         : Colors.white,
                     borderRadius: BorderRadius.circular(4),
@@ -132,7 +126,7 @@ class ReportView extends StackedView<ReportViewModel> {
                       option,
                       style: TextStyle(
                         fontSize: 14,
-                        color: option == selectedOption
+                        color: option == viewModel.selectedOption
                             ? Colors.white
                             : Colors.black,
                       ),
@@ -143,13 +137,25 @@ class ReportView extends StackedView<ReportViewModel> {
             }).toList(),
           ),
         ),
-        SizedBox(
-          height: 20,
-        ),
-        if (selectedOption == "Graphx") GraphSegment(data: sampleData),
-        if (selectedOption == "Data") TabularSegment(data: sampleData),
+        if (viewModel.isBusy)
+          const Expanded(child: Center(child: CircularProgressIndicator()))
+        else ...[
+          if (viewModel.reportData.isEmpty)
+            const Expanded(
+                child: Center(child: Text("No data found for this period")))
+          else ...[
+            viewModel.selectedOption == "Graph"
+                ? GraphSegment(data: viewModel.reportData)
+                : Expanded(child: TabularSegment(data: viewModel.reportData)),
+          ]
+        ]
       ],
     );
+  }
+
+  @override
+  void onViewModelReady(ReportViewModel viewModel) {
+    viewModel.init();
   }
 
   @override
@@ -158,7 +164,7 @@ class ReportView extends StackedView<ReportViewModel> {
   ) =>
       ReportViewModel();
 
-  void showCustomDateRangeDialog(BuildContext context) {
+  void showCustomDateRangeDialog(BuildContext context, ReportViewModel viewModel) {
     showDialog(
       context: context,
       builder: (BuildContext context) {

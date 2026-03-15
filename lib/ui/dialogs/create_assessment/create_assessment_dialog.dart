@@ -116,33 +116,48 @@ class CreateAssessmentDialog extends StackedView<CreateAssessmentDialogModel> {
               ],
             ),
             verticalSpaceMedium,
-            GestureDetector(
-              onTap: () async {
-                if (await viewModel.createAssessment(patientId) == true) {
-                  return completer(DialogResponse(confirmed: true));
-                }
-              },
-              child: Container(
-                height: 50,
-                width: double.infinity,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.circular(10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => completer(DialogResponse(confirmed: false)),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      side: const BorderSide(color: kcMediumGrey),
+                    ),
+                    child: const Text('Cancel', style: TextStyle(color: kcDarkGreyColor)),
+                  ),
                 ),
-                child: viewModel.isBusy
-                    ? CircularProgressIndicator(
-                        color: Colors.white,
-                      )
-                    : const Text(
-                        'Submit',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                horizontalSpaceSmall,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (await viewModel.createAssessment(patientId) == true) {
+                        return completer(DialogResponse(confirmed: true));
+                      }
+                    },
+                    child: Container(
+                      height: 50,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-              ),
+                      child: viewModel.isBusy
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'Submit',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

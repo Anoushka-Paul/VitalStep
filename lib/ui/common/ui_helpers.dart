@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 const double _tinySize = 5.0;
-const double _smallSize = 10.0;
+const double _smallSize = 12.0;
 const double _mediumSize = 25.0;
 const double _largeSize = 50.0;
 const double _massiveSize = 120.0;
@@ -19,15 +19,41 @@ const Widget verticalSpaceMedium = SizedBox(height: _mediumSize);
 const Widget verticalSpaceLarge = SizedBox(height: _largeSize);
 const Widget verticalSpaceMassive = SizedBox(height: _massiveSize);
 
-Widget spacedDivider = const Column(
-  children: <Widget>[
-    verticalSpaceMedium,
-    Divider(color: Colors.blueGrey, height: 5.0),
-    verticalSpaceMedium,
+// Premium Decorations
+BoxDecoration premiumCardDecoration = BoxDecoration(
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(32),
+  border: Border.all(color: const Color(0xFFE0E0E0).withOpacity(0.5), width: 1),
+  boxShadow: [
+    BoxShadow(
+      color: Colors.black.withOpacity(0.04),
+      blurRadius: 24,
+      offset: const Offset(0, 12),
+    ),
   ],
 );
 
+BoxDecoration serviceCardDecoration(Color color) => BoxDecoration(
+  color: color.withOpacity(0.08),
+  borderRadius: BorderRadius.circular(24),
+  border: Border.all(color: color.withOpacity(0.12), width: 1.5),
+);
+
+BoxDecoration softSurfaceDecoration = BoxDecoration(
+  color: const Color(0xFFF5F7FA),
+  borderRadius: BorderRadius.circular(24),
+);
+
+// Font Sizes
+const double kFontSizeXSmall = 12.0;
+const double kFontSizeSmall = 14.0;
+const double kFontSizeMedium = 16.0;
+const double kFontSizeLarge = 20.0;
+const double kFontSizeXLarge = 24.0;
+const double kFontSizeMassive = 32.0;
+
 Widget verticalSpace(double height) => SizedBox(height: height);
+Widget horizontalSpace(double width) => SizedBox(width: width);
 
 double screenWidth(BuildContext context) => MediaQuery.of(context).size.width;
 double screenHeight(BuildContext context) => MediaQuery.of(context).size.height;

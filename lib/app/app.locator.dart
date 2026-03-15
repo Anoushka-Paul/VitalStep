@@ -12,6 +12,7 @@ import 'package:stacked_services/src/navigation/navigation_service.dart';
 import 'package:stacked_shared/stacked_shared.dart';
 
 import '../services/accounts_service.dart';
+import '../services/analysis_service.dart';
 import '../services/api_calls_service.dart';
 import '../services/login_service.dart';
 import '../services/notifications_service.dart';
@@ -32,6 +33,7 @@ Future<void> setupLocator({
   locator.registerLazySingleton(() => DialogService());
   locator.registerLazySingleton(() => NavigationService());
   locator.registerLazySingleton(() => LoginService());
+  locator.registerLazySingleton(() => AnalysisService());
   locator.registerLazySingleton(() => AccountsService());
   locator.registerLazySingleton(() => ApiCallsService());
   locator.registerLazySingleton(() => NotificationsService());
