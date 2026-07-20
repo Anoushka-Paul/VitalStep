@@ -1,6 +1,5 @@
 import 'package:stacked/stacked.dart';
 import 'package:vital_step/Model/accounts.dart';
-import 'package:vital_step/Model/profile.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/services/specialist_service.dart';
 

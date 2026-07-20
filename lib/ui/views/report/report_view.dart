@@ -34,7 +34,7 @@ class ReportView extends StackedView<ReportViewModel> {
 
     DateTime? fromDate;
     DateTime? toDate;
-    Future<void> _selectDate(BuildContext context, bool isFromDate) async {
+    Future<void> selectDate(BuildContext context, bool isFromDate) async {
       DateTime initialDate = isFromDate
           ? (viewModel.fromDate ?? DateTime.now())
           : (viewModel.toDate ?? DateTime.now());
@@ -85,13 +85,13 @@ class ReportView extends StackedView<ReportViewModel> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             ElevatedButton(
-              onPressed: () => _selectDate(context, true),
+              onPressed: () => selectDate(context, true),
               child: Text(viewModel.fromDate == null
                   ? 'Select From Date'
                   : 'From: ${viewModel.fromDate.toString().split(' ')[0]}'),
             ),
             ElevatedButton(
-              onPressed: () => _selectDate(context, false),
+              onPressed: () => selectDate(context, false),
               child: Text(viewModel.toDate == null
                   ? 'Select To Date'
                   : 'To: ${viewModel.toDate.toString().split(' ')[0]}'),
@@ -169,11 +169,11 @@ class ReportView extends StackedView<ReportViewModel> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Select Custom Date Range'),
-          content: Text('Implement custom date range selection here.'),
+          title: const Text('Select Custom Date Range'),
+          content: const Text('Implement custom date range selection here.'),
           actions: <Widget>[
             TextButton(
-              child: Text('OK'),
+              child: const Text('OK'),
               onPressed: () {
                 Navigator.of(context).pop();
               },

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:stacked/stacked.dart';
 import 'package:vital_step/ui/common/app_colors.dart';
-import 'package:vital_step/ui/common/ui_helpers.dart';
 
 import 'startup_viewmodel.dart';
 

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:vital_step/app/app.bottomsheets.dart';
-import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/ui/common/app_strings.dart';
 import 'package:vital_step/ui/views/home/home_viewmodel.dart';
 

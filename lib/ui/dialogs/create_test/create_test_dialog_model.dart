@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:stacked/stacked.dart';
@@ -16,9 +15,6 @@ class CreateTestDialogModel extends BaseViewModel {
 
   final _apiCallService = locator<ApiCallsService>();
   final _accountsService = locator<AccountsService>();
-  final patientNameController = TextEditingController();
-  final ageController = TextEditingController();
-  final purposeController = TextEditingController();
   final _box = GetStorage();
 
   Future<List<Device>?> init({String? preSelectedHand}) async {
@@ -28,11 +24,6 @@ class CreateTestDialogModel extends BaseViewModel {
       hand = "Right"; // Default to Right
     }
     
-    // Pre-fill last used details to speed up testing
-    patientNameController.text = _box.read('last_patient_name') ?? "";
-    ageController.text = _box.read('last_patient_age') ?? "";
-    purposeController.text = _box.read('last_purpose') ?? "Routine Assessment";
-
     final devices = await _accountsService.getDevices();
     if (devices.isNotEmpty) {
       dropDownValue = devices.first.deviceName;
@@ -40,13 +31,6 @@ class CreateTestDialogModel extends BaseViewModel {
     }
     rebuildUi();
     return devices;
-  }
-
-  void savePatientDetails() {
-    _box.write('last_patient_name', patientNameController.text);
-    _box.write('last_patient_age', ageController.text);
-    _box.write('last_purpose', purposeController.text);
-    // You could also store a list of these if needed for history
   }
 
   Future<bool> createTest(
@@ -68,11 +52,4 @@ class CreateTestDialogModel extends BaseViewModel {
     }
   }
 
-  @override
-  void dispose() {
-    patientNameController.dispose();
-    ageController.dispose();
-    purposeController.dispose();
-    super.dispose();
-  }
 }

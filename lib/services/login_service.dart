@@ -28,13 +28,13 @@ class LoginService {
     }
   }
 
-  Future<String> getUserId() async {
+  Future<String?> getUserId() async {
     try {
       final userId = box.read("userId");
-      return userId;
+      return userId?.toString();
     } catch (e) {
       _logger.e('Failed to get userId, error: $e');
-      rethrow;
+      return null;
     }
   }
 
@@ -86,10 +86,24 @@ class LoginService {
       );
     } else {
       _logger.e('Failed to login, status code: ${response.statusCode}');
+      _logger.e('Server error response: ${response.body}');
+
+      String errorMessage = 'An unexpected error occurred during sign in.';
+      try {
+        final errorJson = jsonDecode(response.body);
+        if (errorJson is Map && errorJson.containsKey('message')) {
+          errorMessage = errorJson['message'];
+        } else if (errorJson is Map && errorJson.containsKey('error')) {
+          errorMessage = errorJson['error'];
+        }
+      } catch (_) {
+        errorMessage = 'Server error (${response.statusCode}). Please contact support.';
+      }
+
       _dialogService.showCustomDialog(
         variant: DialogType.infoAlert,
         title: 'Error Logging In',
-        description: 'An error occurred',
+        description: errorMessage,
       );
     }
   }
@@ -100,49 +114,86 @@ class LoginService {
     };
     var request = http.Request('POST', Uri.parse('$apiBaseUrl/auth/register'));
 
-    request.body = json.encode(signUpInfo.toJson());
+    var signUpJson = signUpInfo.toJson();
+    // Remove null or empty values to avoid potential backend rejection
+    signUpJson.removeWhere((key, value) => value == null || value == "");
+
+    request.body = json.encode(signUpJson);
     _logger.i('Request body: ${request.body}');
     request.headers.addAll(headers);
 
     http.StreamedResponse streamedResponse = await request.send();
     http.Response response = await http.Response.fromStream(streamedResponse);
+
     if (response.statusCode == 200) {
-      final json = jsonDecode(response.body);
+      final jsonResponse = jsonDecode(response.body);
       String? cookie = response.headers['set-cookie'];
-      final userId = json[0]['id'].toString();
+      
+      // Handle both array [0] and object formats for userId
+      final dynamic userIdData = (jsonResponse is List && jsonResponse.isNotEmpty)
+          ? jsonResponse[0]['id']
+          : jsonResponse['id'];
+      
+      if (userIdData == null) {
+        _logger.e('Failed to extract userId from response: ${response.body}');
+        _dialogService.showCustomDialog(
+          variant: DialogType.infoAlert,
+          title: 'Error Signing Up',
+          description: '[DEBUG_NEW_1] Failed to retrieve user ID after registration.',
+        );
+        return;
+      }
+
+      final userId = userIdData.toString();
 
       cookie ??= await getCookie(
           userId: userId,
           email: signUpInfo.email,
           password: signUpInfo.password);
+
       if (cookie == null) {
-        _logger.e('Failed to get cookie');
+        _logger.e('Failed to get cookie after successful registration');
         _dialogService.showCustomDialog(
           variant: DialogType.infoAlert,
           title: 'Error Signing Up',
-          description: 'An error occurred',
+          description: '[DEBUG_NEW_2] Registration successful, but auto-login failed. Please try signing in.',
         );
         return;
       }
+      
       _logger.i('User registered successfully, userId: $userId');
       box.write("cookie", cookie);
       box.write('userId', userId);
       NavigationService().navigateToDeviceView(showExistingDevices: false);
     } else if (response.statusCode == 404) {
-      _logger.e(
-          'Failed to create a Account, status code: ${response.statusCode}, Account Already exists');
+      _logger.e('Failed to create account, status code 404. Account probably already exists.');
       _dialogService.showCustomDialog(
         variant: DialogType.infoAlert,
-        title: 'Unable to create a new account',
-        description: 'Unable to create a new account, Account Already exists',
+        title: 'Unable to Create Account',
+        description: 'An account with this email already exists.',
       );
     } else {
       _logger.e('Failed to Signup, status code: ${response.statusCode}');
-      _logger.e('Unable to sign Up: ${response.body}');
+      _logger.e('Server error response: ${response.body}');
+      
+      // Try to parse the error message from the server response
+      String errorMessage = '[DEBUG_SERVER_ERROR]: ';
+      try {
+        final errorJson = jsonDecode(response.body);
+        if (errorJson is Map && errorJson.containsKey('message')) {
+          errorMessage = errorJson['message'];
+        } else if (errorJson is Map && errorJson.containsKey('error')) {
+          errorMessage = errorJson['error'];
+        }
+      } catch (_) {
+        // If parsing fails, use the status code
+        errorMessage = 'Server error (${response.statusCode}). Please contact support.';
+      }
+
       _dialogService.showCustomDialog(
         variant: DialogType.infoAlert,
         title: 'Error Signing Up',
-        description: 'An error occurred',
+        description: errorMessage,
       );
     }
   }
@@ -197,18 +248,31 @@ class LoginService {
     if (response.statusCode == 200) {
       Fluttertoast.showToast(msg: "Profile Updated Successfully");
     } else {
-      _logger
-          .e('Failed to update profile, status code: ${response.statusCode}');
+      _logger.e('Failed to update profile, status code: ${response.statusCode}');
+      _logger.e('Server error response: ${response.body}');
+
+      String errorMessage = 'An unexpected error occurred while updating profile.';
+      try {
+        final errorJson = jsonDecode(response.body);
+        if (errorJson is Map && errorJson.containsKey('message')) {
+          errorMessage = errorJson['message'];
+        } else if (errorJson is Map && errorJson.containsKey('error')) {
+          errorMessage = errorJson['error'];
+        }
+      } catch (_) {
+        errorMessage = 'Server error (${response.statusCode}). Please contact support.';
+      }
+
       _dialogService.showCustomDialog(
         variant: DialogType.infoAlert,
         title: 'Error Updating Profile',
-        description: 'An error occurred',
+        description: errorMessage,
       );
     }
   }
 
-  Future<String> getUserType() async {
+  Future<String?> getUserType() async {
     final userType = box.read('userType');
-    return userType;
+    return userType?.toString();
   }
 }

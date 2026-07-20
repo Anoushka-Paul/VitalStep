@@ -40,6 +40,7 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
       backgroundColor: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(25),
+      child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
@@ -51,6 +52,7 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            verticalSpaceSmall,
             const Text(
               'Select hand',
               style: TextStyle(
@@ -82,9 +84,10 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
                 const Text("Left"),
               ],
             ),
+            verticalSpaceSmall,
             const Text(
               'Select the device',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
               ),
@@ -94,7 +97,7 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const SizedBox(
-                    height: 200,
+                    height: 100,
                     child: Center(
                       child: CircularProgressIndicator(),
                     ),
@@ -136,35 +139,6 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
                 }
               },
             ),
-                  verticalSpaceMedium,
-            const Text(
-              'Patient Details',
-              style: TextStyle(
-                fontSize: 16,
-                color: kcMediumGrey,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            verticalSpaceSmall,
-            _buildTextField(
-              controller: viewModel.patientNameController,
-              label: "Patient Name",
-              icon: Icons.person,
-            ),
-            verticalSpaceSmall,
-            _buildTextField(
-              controller: viewModel.ageController,
-              label: "Age",
-              icon: Icons.calendar_today,
-              inputType: TextInputType.number,
-            ),
-            verticalSpaceSmall,
-            _buildTextField(
-              controller: viewModel.purposeController,
-              label: "Purpose of Test",
-              icon: Icons.note_alt_outlined,
-              hint: "e.g. Weekly Checkup, Recovery Monitoring",
-            ),
             verticalSpaceLarge,
             Row(
               children: [
@@ -187,15 +161,6 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
                         Fluttertoast.showToast(msg: "Please select hand and device");
                         return;
                       }
-                      if (viewModel.patientNameController.text.isEmpty ||
-                          viewModel.ageController.text.isEmpty ||
-                          viewModel.purposeController.text.isEmpty) {
-                        Fluttertoast.showToast(msg: "Please fill all patient details");
-                        return;
-                      }
-
-                      // Save details locally since API doesn't support them yet
-                      viewModel.savePatientDetails();
 
                       final testResponse = await viewModel.createTest(
                           assessment, viewModel.hand!, viewModel.deviceId!);
@@ -229,6 +194,7 @@ class CreateTestDialog extends StackedView<CreateTestDialogModel> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

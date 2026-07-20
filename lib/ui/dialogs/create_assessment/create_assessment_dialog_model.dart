@@ -44,6 +44,6 @@ class CreateAssessmentDialogModel extends BaseViewModel {
 
   Future<int> _getOwnUserId() async {
     final profile = await _accountsService.getAccountDetails();
-    return profile?.id ?? 0;
+    return profile.id ?? 0;
   }
 }

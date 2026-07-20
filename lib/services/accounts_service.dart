@@ -18,7 +18,7 @@ class AccountsService {
   Future<Profile> getAccountDetails({int? patientUserId}) async {
     final String userId = patientUserId != null
         ? patientUserId.toString()
-        : (await _loginService.getUserId());
+        : (await _loginService.getUserId())!;
     final Response response = await get(
       Uri.parse('$apiBaseUrl/user/$userId'),
       headers: <String, String>{'accept': 'application/json'},
@@ -55,7 +55,7 @@ class AccountsService {
 
   Future<void> addDevice(
       {required String deviceCode, required String deviceName}) async {
-    final String userId = await _loginService.getUserId();
+    final String userId = (await _loginService.getUserId())!;
     final String cookie = box.read("cookie");
     final Headers headers = {
       'Content-Type': 'application/json',
@@ -100,7 +100,7 @@ class AccountsService {
   }
 
   Future<void> deleteAccount() async {
-    final String userId = await _loginService.getUserId();
+    final String userId = (await _loginService.getUserId())!;
 
     final String cookie = box.read("cookie");
     final Headers headers = {

@@ -74,13 +74,13 @@ class AnalysisService {
     }
 
     if (leftAvg == 0) {
-      return CompareResult(
+      return const CompareResult(
         balanceScore: 0,
         percentDiff: 100,
         weakerHand: 'Left',
         strongerHand: 'Right',
         severity: 'No Left Data',
-        severityColor: const Color(0xFFFF9800),
+        severityColor: Color(0xFFFF9800),
         headline: 'No Left hand data recorded',
         explanation: 'You have only tested your Right hand. Test your Left hand too to see how they compare.',
         recommendations: ['Take a Left hand test from the Assessments tab.'],
@@ -88,13 +88,13 @@ class AnalysisService {
     }
 
     if (rightAvg == 0) {
-      return CompareResult(
+      return const CompareResult(
         balanceScore: 0,
         percentDiff: 100,
         weakerHand: 'Right',
         strongerHand: 'Left',
         severity: 'No Right Data',
-        severityColor: const Color(0xFFFF9800),
+        severityColor: Color(0xFFFF9800),
         headline: 'No Right hand data recorded',
         explanation: 'You have only tested your Left hand. Test your Right hand too to see how they compare.',
         recommendations: ['Take a Right hand test from the Assessments tab.'],

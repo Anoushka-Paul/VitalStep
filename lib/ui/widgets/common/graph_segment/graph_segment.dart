@@ -22,11 +22,11 @@ class GraphSegment extends StackedView<GraphSegmentModel> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               Container(
-                margin: EdgeInsets.only(left: 20, right: 20, bottom: 15),
+                margin: const EdgeInsets.only(left: 20, right: 20, bottom: 15),
                 decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(5)),
@@ -34,21 +34,21 @@ class GraphSegment extends StackedView<GraphSegmentModel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
+                    const Padding(
+                      padding: EdgeInsets.all(8.0),
                       child: Text(
                         "Pressure Value Over Time",
                         style: TextStyle(
                             fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                     ),
-                    Container(
+                    SizedBox(
                       height: 400,
                       width: double.infinity,
                       child: LineChart(
                         LineChartData(
-                          gridData: FlGridData(show: true),
-                          titlesData: FlTitlesData(show: true),
+                          gridData: const FlGridData(show: true),
+                          titlesData: const FlTitlesData(show: true),
                           borderData: FlBorderData(
                             show: true,
                             border: Border.all(color: Colors.black, width: 1),

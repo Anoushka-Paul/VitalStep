@@ -24,8 +24,10 @@ class StartupViewModel extends BaseViewModel {
         final userType = await _loginService.getUserType();
         if (userType == 'Patient') {
           _navigationService.clearStackAndShow(Routes.homeView);
-        } else {
+        } else if (userType == 'Specialist') {
           _navigationService.clearStackAndShow(Routes.homeSpecialistView);
+        } else {
+          _navigationService.clearStackAndShow(Routes.loginView);
         }
       } else {
         _navigationService.clearStackAndShow(Routes.loginView);

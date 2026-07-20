@@ -58,7 +58,7 @@ class ApiCallsService {
   }
 
   Future<List<Test>> getAllUserTests() async {
-    final userId = await _loginService.getUserId();
+    final userId = (await _loginService.getUserId())!;
     final cookie = box.read('cookie');
     final Headers headers = {'accept': 'application/json', "cookie": cookie};
     final response = await get(
@@ -105,7 +105,7 @@ class ApiCallsService {
   }
 
   getHandsValues() async {
-    final userId = await _loginService.getUserId();
+    final userId = (await _loginService.getUserId())!;
     final Headers headers = {'accept': 'application/json', "cookie": cookie};
     final response = await get(
       Uri.parse('$apiBaseUrl/test/hands/$userId'),
@@ -187,7 +187,7 @@ class ApiCallsService {
       {required Assessment assessment,
       required String hand,
       required String deviceId}) async {
-    final userId = await _loginService.getUserId();
+    final userId = (await _loginService.getUserId())!;
     final cookie = box.read('cookie');
     final Headers headers = {
       'accept': 'application/json',
@@ -308,7 +308,7 @@ class ApiCallsService {
   }
 
   Future<List<Accounts>> getSpecialists() async {
-    final userId = await _loginService.getUserId();
+    final userId = (await _loginService.getUserId())!;
     final cookie = box.read('cookie');
     final Headers headers = {'accept': 'application/json', "cookie": cookie};
     final response = await get(
@@ -334,7 +334,7 @@ class ApiCallsService {
     //  curl -X 'GET' \
     // 'https://ameya-backend.onrender.com/api/queue/user/5' \
     // -H 'accept: application/json'
-    final userId = await _loginService.getUserId();
+    final userId = (await _loginService.getUserId())!;
     final cookie = box.read('cookie');
     final Headers headers = {'accept': 'application/json', "cookie": cookie};
     final response = await get(
@@ -367,7 +367,7 @@ class ApiCallsService {
       _logger.i("Assessment cancelled successfully");
       Fluttertoast.showToast(msg: "Assessment cancelled successfully");
       NavigationService().clearStackAndShow(Routes.homeView,
-          arguments: HomeViewArguments(firstPage: 1));
+          arguments: const HomeViewArguments(firstPage: 1));
       // NavigationService().back();
     } else {
       _logger.e(

@@ -36,7 +36,7 @@ mixin _$SignUpInfo {
   double? get palmLength => throw _privateConstructorUsedError;
   @JsonKey(name: "palm_width")
   double? get palmWidth => throw _privateConstructorUsedError;
-  @JsonKey(name: "knuckle_length")
+  @JsonKey(name: "knuckles_length")
   double? get knuckleLength => throw _privateConstructorUsedError;
   @JsonKey(name: "dominant_hand")
   String get dominantHand => throw _privateConstructorUsedError;
@@ -69,7 +69,7 @@ abstract class $SignUpInfoCopyWith<$Res> {
       int height,
       @JsonKey(name: "palm_length") double? palmLength,
       @JsonKey(name: "palm_width") double? palmWidth,
-      @JsonKey(name: "knuckle_length") double? knuckleLength,
+      @JsonKey(name: "knuckles_length") double? knuckleLength,
       @JsonKey(name: "dominant_hand") String dominantHand,
       String gender});
 }
@@ -201,7 +201,7 @@ abstract class _$$SignUpInfoImplCopyWith<$Res>
       int height,
       @JsonKey(name: "palm_length") double? palmLength,
       @JsonKey(name: "palm_width") double? palmWidth,
-      @JsonKey(name: "knuckle_length") double? knuckleLength,
+      @JsonKey(name: "knuckles_length") double? knuckleLength,
       @JsonKey(name: "dominant_hand") String dominantHand,
       String gender});
 }
@@ -326,7 +326,7 @@ class _$SignUpInfoImpl extends _SignUpInfo {
       required this.height,
       @JsonKey(name: "palm_length") this.palmLength,
       @JsonKey(name: "palm_width") this.palmWidth,
-      @JsonKey(name: "knuckle_length") this.knuckleLength,
+      @JsonKey(name: "knuckles_length") this.knuckleLength,
       @JsonKey(name: "dominant_hand") required this.dominantHand,
       required this.gender})
       : super._();
@@ -365,7 +365,7 @@ class _$SignUpInfoImpl extends _SignUpInfo {
   @JsonKey(name: "palm_width")
   final double? palmWidth;
   @override
-  @JsonKey(name: "knuckle_length")
+  @JsonKey(name: "knuckles_length")
   final double? knuckleLength;
   @override
   @JsonKey(name: "dominant_hand")
@@ -460,7 +460,7 @@ abstract class _SignUpInfo extends SignUpInfo {
       required final int height,
       @JsonKey(name: "palm_length") final double? palmLength,
       @JsonKey(name: "palm_width") final double? palmWidth,
-      @JsonKey(name: "knuckle_length") final double? knuckleLength,
+      @JsonKey(name: "knuckles_length") final double? knuckleLength,
       @JsonKey(name: "dominant_hand") required final String dominantHand,
       required final String gender}) = _$SignUpInfoImpl;
   const _SignUpInfo._() : super._();
@@ -499,7 +499,7 @@ abstract class _SignUpInfo extends SignUpInfo {
   @JsonKey(name: "palm_width")
   double? get palmWidth;
   @override
-  @JsonKey(name: "knuckle_length")
+  @JsonKey(name: "knuckles_length")
   double? get knuckleLength;
   @override
   @JsonKey(name: "dominant_hand")

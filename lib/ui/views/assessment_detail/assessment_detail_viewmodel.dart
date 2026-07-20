@@ -1,5 +1,4 @@
 import 'package:stacked/stacked.dart';
-import 'package:vital_step/Model/Assessment.dart';
 import 'package:vital_step/Model/Comment.dart';
 import 'package:vital_step/Model/test.dart';
 import 'package:vital_step/app/app.locator.dart';

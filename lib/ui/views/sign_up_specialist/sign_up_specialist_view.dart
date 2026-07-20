@@ -5,7 +5,6 @@ import 'package:vital_step/Model/spcialist_profile.dart';
 import 'package:vital_step/ui/common/FormValidators.dart';
 import 'package:vital_step/ui/common/app_colors.dart';
 import 'package:vital_step/ui/common/app_strings.dart';
-import 'package:vital_step/ui/common/ui_helpers.dart';
 import 'package:vital_step/ui/views/sign_up/sign_up_view.dart';
 import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.form.dart';
 
@@ -42,7 +41,7 @@ class SignUpSpecialistView extends StackedView<SignUpSpecialistViewModel>
     SignUpSpecialistViewModel viewModel,
     Widget? child,
   ) {
-    final bool update = this.profile != null;
+    final bool update = profile != null;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -77,7 +76,7 @@ class SignUpSpecialistView extends StackedView<SignUpSpecialistViewModel>
               _buildField("Email Address", emailController, "specialist@example.com", 
                   keyboardType: TextInputType.emailAddress, 
                   validator: FormValidators.emailValidator,
-                  enabled: this.profile == null),
+                  enabled: profile == null),
               
               if (!update) ...[
                 const SizedBox(height: 8),
@@ -146,7 +145,7 @@ class SignUpSpecialistView extends StackedView<SignUpSpecialistViewModel>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text("Mobile Number", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
         ),
         Row(
@@ -168,7 +167,7 @@ class SignUpSpecialistView extends StackedView<SignUpSpecialistViewModel>
                 controller: mobileNumberController,
                 keyboardType: TextInputType.phone,
                 validator: FormValidators.mobileNumberValidator,
-                enabled: this.profile == null,
+                enabled: profile == null,
                 decoration: premiumInputDecoration("Phone Number"),
               ),
             ),
@@ -184,7 +183,7 @@ class SignUpSpecialistView extends StackedView<SignUpSpecialistViewModel>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text("Password", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
         ),
         TextFormField(

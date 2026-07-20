@@ -22,7 +22,7 @@ _$SignUpInfoImpl _$$SignUpInfoImplFromJson(Map<String, dynamic> json) =>
       height: (json['height'] as num).toInt(),
       palmLength: (json['palm_length'] as num?)?.toDouble(),
       palmWidth: (json['palm_width'] as num?)?.toDouble(),
-      knuckleLength: (json['knuckle_length'] as num?)?.toDouble(),
+      knuckleLength: (json['knuckles_length'] as num?)?.toDouble(),
       dominantHand: json['dominant_hand'] as String,
       gender: json['gender'] as String,
     );
@@ -43,7 +43,7 @@ Map<String, dynamic> _$$SignUpInfoImplToJson(_$SignUpInfoImpl instance) =>
       'height': instance.height,
       'palm_length': instance.palmLength,
       'palm_width': instance.palmWidth,
-      'knuckle_length': instance.knuckleLength,
+      'knuckles_length': instance.knuckleLength,
       'dominant_hand': instance.dominantHand,
       'gender': instance.gender,
     };

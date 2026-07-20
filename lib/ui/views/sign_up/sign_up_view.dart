@@ -138,12 +138,12 @@ class SignUpView extends StackedView<SignUpViewModel> with $SignUpView {
               _buildField("Country", countryController, "Country"),
 
               const SizedBox(height: 32),
-              if (this.profile == null) _buildTermsCheckbox(viewModel),
+              if (profile == null) _buildTermsCheckbox(viewModel),
               
               const SizedBox(height: 40),
               _buildSubmitButton(viewModel, update),
               const SizedBox(height: 24),
-              if (this.profile == null) const SignUpBottom(),
+              if (profile == null) const SignUpBottom(),
               const SizedBox(height: 40),
             ],
           ),
@@ -187,7 +187,7 @@ class SignUpView extends StackedView<SignUpViewModel> with $SignUpView {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text("Mobile Number", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
         ),
         Row(
@@ -209,7 +209,7 @@ class SignUpView extends StackedView<SignUpViewModel> with $SignUpView {
                 controller: mobileNumberController,
                 keyboardType: TextInputType.phone,
                 validator: FormValidators.mobileNumberValidator,
-                enabled: this.profile == null,
+                enabled: profile == null,
                 decoration: premiumInputDecoration("Phone Number"),
               ),
             ),
@@ -225,7 +225,7 @@ class SignUpView extends StackedView<SignUpViewModel> with $SignUpView {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text("Password", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: kcDarkGreyColor)),
         ),
         TextFormField(
@@ -428,14 +428,14 @@ class SignUpHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         verticalSpaceLarge,
-        Text(
+        const Text(
           "VITALSTEP",
           style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
         verticalSpaceMedium,
         Text(
           update == true ? "Update" : "Sign Up",
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 22,
           ),
         ),

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:stacked/stacked_annotations.dart';
 import 'package:vital_step/Model/Assessment.dart';
 import 'package:vital_step/ui/common/ui_helpers.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:vital_step/ui/dialogs/add_patient/add_patient_dialog.form.dart';
 
 import 'add_comment_dialog_model.dart';
 

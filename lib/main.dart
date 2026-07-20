@@ -10,13 +10,18 @@ import 'package:vital_step/app/app.dialogs.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
 import 'package:stacked_services/stacked_services.dart';
+import 'package:vital_step/services/device_selection_service.dart';
 import 'package:vital_step/services/notifications_service.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
+
+/// Second Supabase client for patient data (New_Supabase_Project).
+/// Distinct from [Supabase.instance.client] which handles kill-switch only.
+late final SupabaseClient patientSupabaseClient;
+
 @pragma('vm:entry-point')
 void notificationTapBackground(
     NotificationResponse notificationResponse) async {
@@ -42,8 +47,27 @@ Future<void> main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvdWpneHFnaXhwYW56dHl5c2hjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMxOTc3ODQsImV4cCI6MjAzODc3Mzc4NH0.7oZoJa7kYpIjj48dOI_iamjxLlMqv_pek52RswBtpRs',
   );
+
+  // Initialize second Supabase client for patient data
+  patientSupabaseClient = SupabaseClient(
+    const String.fromEnvironment(
+      'PATIENT_SUPABASE_URL',
+      defaultValue: 'https://cbebmpgsbxqdzpfgqulj.supabase.co',
+    ),
+    const String.fromEnvironment(
+      'PATIENT_SUPABASE_ANON_KEY',
+      defaultValue:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiZWJtcGdzYnhxZHpwZmdxdWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjQ3MjEsImV4cCI6MjA5ODY0MDcyMX0.n5oOlnR1GFWDG2SxLOlmW1B_NPvnhABl7Kv-pP5mtKY',
+    ),
+  );
+
   setupBottomSheetUi();
   await GetStorage.init();
+
+  // Initialize DeviceSelectionService
+  final deviceSelectionService = locator<DeviceSelectionService>();
+  await deviceSelectionService.initialize();
+
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings("app_icon");
 
@@ -82,6 +106,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       initialRoute: initialRoute,
       theme: _buildTheme(context),
       onGenerateRoute: StackedRouter().onGenerateRoute,
@@ -95,12 +120,13 @@ class MainApp extends StatelessWidget {
   ThemeData _buildTheme(BuildContext context) {
     try {
       return ThemeData(
-        textTheme: GoogleFonts.outfitTextTheme(Theme.of(context).textTheme),
+        textTheme: Theme.of(context).textTheme,
         primaryColor: const Color(0xFF1E88E5),
       );
     } catch (e) {
       // Fallback to default theme if GoogleFonts fails (e.g. AssetManifest error)
-      debugPrint("GoogleFonts failed to load: $e. Falling back to system fonts.");
+      debugPrint(
+          "GoogleFonts failed to load: $e. Falling back to system fonts.");
       return ThemeData(
         primaryColor: const Color(0xFF1E88E5),
       );

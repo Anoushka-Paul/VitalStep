@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:vital_step/app/app.dialogs.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
 import 'package:vital_step/services/login_service.dart';
 import 'package:vital_step/ui/common/app_colors.dart';
 import 'package:vital_step/ui/common/ui_helpers.dart';
-import 'package:vital_step/ui/views/home/home_view.dart';
 
 import 'login_viewmodel.dart';
 

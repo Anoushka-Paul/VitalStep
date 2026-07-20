@@ -8,7 +8,6 @@ import 'package:vital_step/services/api_calls_service.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 
@@ -17,7 +16,6 @@ enum ChartType { line, bar }
 
 class AssessmentHistoryViewModel extends BaseViewModel {
   List<Test>? tests;
-  final _accountsService = locator<AccountsService>();
   final _apiCallsService = locator<ApiCallsService>();
   init({required int assessmentId, int? patientUserId}) async {
     tests = null;
@@ -143,7 +141,6 @@ class AssessmentHistoryViewModel extends BaseViewModel {
       case ChartPeriod.year:
         return DateFormat('yyyy');
       case ChartPeriod.month:
-      default:
         return DateFormat('MMM yy');
     }
   }
@@ -223,16 +220,23 @@ class AssessmentHistoryViewModel extends BaseViewModel {
     setBusy(true);
     try {
       final Profile profile = await _accountService.getAccountDetails(patientUserId: patientId);
-      final List<Test> tests = await _apiCallsService.getAllAssessmentTests(
+
+      // Re-fetch to ensure latest data is included (e.g. just-completed test)
+      final List<Test> freshTests = await _apiCallsService.getAllAssessmentTests(
           assessmentId: assessmentId);
-      
+
+      // Merge: use fresh fetch but fall back to already-loaded tests if fresh is empty
+      final List<Test> tests = freshTests.isNotEmpty
+          ? freshTests
+          : (this.tests ?? []);
+
       if (tests.isEmpty) {
         setBusy(false);
         return;
       }
 
       final pdf = pw.Document();
-      final customBlue = PdfColor.fromInt(0xFFBCD5DF);
+      const customBlue = PdfColor.fromInt(0xFFBCD5DF);
       
       // Right hand tests
       final rightTests = tests.where((t) => t.hand == "Right").toList();
@@ -252,7 +256,7 @@ class AssessmentHistoryViewModel extends BaseViewModel {
             pw.TableHelper.fromTextArray(
               headers: ["Patient's Detail", ""],
               data: [
-                ["Patient's Name", "${profile.name ?? 'User'}"],
+                ["Patient's Name", (profile.name ?? 'User')],
                 ["Assessment ID", assessmentId.toString()],
                 ["Date", DateFormat('yyyy-MM-dd').format(DateTime.now())],
               ],
@@ -269,7 +273,7 @@ class AssessmentHistoryViewModel extends BaseViewModel {
                 t.trial3,
                 calculateAverage(t)
               ]).toList(),
-              headerDecoration: pw.BoxDecoration(color: customBlue),
+              headerDecoration: const pw.BoxDecoration(color: customBlue),
             ),
             pw.SizedBox(height: 20),
             pw.Text("2. Left Hand Table", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
@@ -283,7 +287,23 @@ class AssessmentHistoryViewModel extends BaseViewModel {
                 t.trial3,
                 calculateAverage(t)
               ]).toList(),
-              headerDecoration: pw.BoxDecoration(color: customBlue),
+              headerDecoration: const pw.BoxDecoration(color: customBlue),
+            ),
+            pw.SizedBox(height: 20),
+            pw.Text("3. Latest Assessment Summary", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            pw.TableHelper.fromTextArray(
+              headers: ["Hand", "Date", "Trial 1", "Trial 2", "Trial 3", "Average"],
+              data: [
+                if (rightTests.isNotEmpty) () {
+                  final t = rightTests.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
+                  return ["Right", getDate(t.createdAt), t.trial1, t.trial2, t.trial3, calculateAverage(t)];
+                }(),
+                if (leftTests.isNotEmpty) () {
+                  final t = leftTests.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
+                  return ["Left", getDate(t.createdAt), t.trial1, t.trial2, t.trial3, calculateAverage(t)];
+                }(),
+              ],
+              headerDecoration: const pw.BoxDecoration(color: customBlue),
             ),
           ],
         ),

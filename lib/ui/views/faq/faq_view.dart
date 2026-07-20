@@ -29,7 +29,7 @@ class FaqView extends StackedView<FaqViewModel> {
                   child: ExpansionTile(
                     title: Text(
                       faqs[index].question,
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     tilePadding: EdgeInsets.zero,
                     childrenPadding: EdgeInsets.zero,

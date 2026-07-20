@@ -6,8 +6,8 @@ import 'package:vital_step/ui/common/app_colors.dart';
 import 'package:vital_step/ui/common/ui_helpers.dart';
 import 'compare_viewmodel.dart';
 
-const Color _leftColor = kcSecondaryColor;
-const Color _rightColor = kcPrimaryColor;
+const Color _leftColor = kcSecondaryColor;  // Left Hand = blue
+const Color _rightColor = kcPrimaryColor;   // Right Hand = green
 
 class CompareView extends StackedView<CompareViewModel> {
   const CompareView({Key? key}) : super(key: key);
@@ -63,7 +63,7 @@ class CompareView extends StackedView<CompareViewModel> {
                       // ── 5. Recommendations ──
                       if (vm.compareResult != null &&
                           vm.compareResult!.recommendations.isNotEmpty) ...[
-                        _buildLabel('Recommended Actions'),
+                        _buildLabel('AI Recommended Actions'),
                         verticalSpaceSmall,
                         _buildRecommendations(vm.compareResult!),
                         verticalSpaceMedium,
@@ -141,20 +141,20 @@ class CompareView extends StackedView<CompareViewModel> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${result.balanceScore.toStringAsFixed(0)}',
+                    result.balanceScore.toStringAsFixed(0),
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: result.severityColor,
                     ),
                   ),
-                  Text('/ 100', style: TextStyle(fontSize: 12, color: kcMediumGrey)),
+                  const Text('/ 100', style: TextStyle(fontSize: 12, color: kcMediumGrey)),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Balance Score',
             style: TextStyle(fontSize: 12, color: kcMediumGrey, letterSpacing: 0.5),
           ),
@@ -271,8 +271,8 @@ class CompareView extends StackedView<CompareViewModel> {
               getTitlesWidget: (v, _) => Text(v.toStringAsFixed(1), style: const TextStyle(fontSize: 10, color: kcMediumGrey)),
             ),
           ),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         gridData: FlGridData(drawVerticalLine: false, getDrawingHorizontalLine: (_) => FlLine(color: Colors.grey.shade100, strokeWidth: 1)),
         borderData: FlBorderData(show: false),
@@ -461,9 +461,9 @@ class CompareView extends StackedView<CompareViewModel> {
         ),
         borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           leftTitles: AxisTitles(
             axisNameWidget: const Text('Kg', style: TextStyle(fontSize: 10, color: kcMediumGrey)),
             axisNameSize: 16,
@@ -518,15 +518,15 @@ class CompareView extends StackedView<CompareViewModel> {
       );
 
   Widget _buildEmpty() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.compare_arrows, size: 80, color: kcMediumGrey),
+          Icon(Icons.compare_arrows, size: 80, color: kcMediumGrey),
           verticalSpaceMedium,
-          const Text('No test data yet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
+          Text('No test data yet', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
           verticalSpaceSmall,
-          const Text(
+          Text(
             'Complete tests on both hands to see\nyour balance comparison.',
             textAlign: TextAlign.center,
             style: TextStyle(color: kcMediumGrey),

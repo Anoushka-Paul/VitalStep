@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:ffi';
 
-import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -11,7 +9,6 @@ import 'package:vital_step/app/app.dialogs.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
 import 'package:vital_step/services/accounts_service.dart';
-import 'package:vital_step/services/api_calls_service.dart';
 import 'package:vital_step/services/api_calls_service.dart';
 import 'package:vital_step/services/specialist_service.dart';
 import 'package:get_storage/get_storage.dart';
@@ -54,8 +51,8 @@ class AssesmentViewModel extends BaseViewModel {
     // if the queue is empty, then give a popup and create a test
     if (assessmentQueue.isEmpty) {
       // show a popup that the queue is empty.
-      final _box = GetStorage();
-      String? preSelectedHand = _box.read("preSelectedHand");
+      final box = GetStorage();
+      String? preSelectedHand = box.read("preSelectedHand");
 
       Map<String, dynamic> dialogData = {
         'assessment': assessment.toJson(),

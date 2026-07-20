@@ -127,6 +127,6 @@ class SignUpSpecialistViewModel extends FormViewModel {
     pincodeValue = profile.pincode == null ? "" : profile.pincode.toString();
     countryValue = profile.country;
     viewDobController.text =
-        DateFormat("dd-MM-yyyy").format(DateTime.parse(profile.dob!));
+        DateFormat("dd-MM-yyyy").format(DateTime.parse(profile.dob));
   }
 }

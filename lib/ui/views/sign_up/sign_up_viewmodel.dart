@@ -115,7 +115,7 @@ class SignUpViewModel extends FormViewModel {
             phone: int.parse(mobileNumberValue!),
             email: emailValue!,
             password: passwordValue!,
-            dob: viewDobController.text,
+            dob: dobValue != null ? DateFormat("yyyy-MM-dd").format(dobValue!) : viewDobController.text, // Use ISO format for backend
             city: cityValue,
             country: countryValue,
             pincode: int.tryParse(pincodeValue!),
@@ -160,8 +160,8 @@ class SignUpViewModel extends FormViewModel {
     cityValue = profile.city;
     pincodeValue = profile.pincode == null ? "" : profile.pincode.toString();
     countryValue = profile.country;
-    weightValue = profile.weight == null ? "" : profile.weight.toString();
-    heightValue = profile.height == null ? "" : profile.height.toString();
+    weightValue = profile.weight.toString();
+    heightValue = profile.height.toString();
     palmLengthValue =
         profile.palmLength == null ? "" : profile.palmLength.toString();
     palmWidthValue =

@@ -20,8 +20,8 @@ class AnalysisRadarChart extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── How to read label ──
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
           child: Text(
             "Performance Radar  (higher = better)",
             style: TextStyle(fontSize: 12, color: kcMediumGrey, fontStyle: FontStyle.italic),
@@ -56,10 +56,10 @@ class AnalysisRadarChart extends StatelessWidget {
               ),
               getTitle: (index, angle) {
                 switch (index) {
-                  case 0: return RadarChartTitle(text: 'Peak');
-                  case 1: return RadarChartTitle(text: 'Consistency');
-                  case 2: return RadarChartTitle(text: 'Symmetry');
-                  default: return RadarChartTitle(text: '');
+                  case 0: return const RadarChartTitle(text: 'Peak');
+                  case 1: return const RadarChartTitle(text: 'Consistency');
+                  case 2: return const RadarChartTitle(text: 'Symmetry');
+                  default: return const RadarChartTitle(text: '');
                 }
               },
               tickCount: 4,
@@ -92,9 +92,9 @@ class AnalysisRadarChart extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Column(
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               _Hint("Peak", "Max grip force across all 3 trials (Kg)"),
               _Hint("Consistency", "How similar your 3 trials were (100% = identical)"),
               _Hint("Symmetry", "Left vs Right balance (100% = equal strength)"),

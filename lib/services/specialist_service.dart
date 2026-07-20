@@ -1,12 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:stacked_services/stacked_services.dart';
 import 'package:vital_step/Model/accounts.dart';
-import 'package:vital_step/Model/profile.dart';
 import 'package:vital_step/Model/spcialist_profile.dart';
 import 'package:vital_step/app/app.dialogs.dart';
 import 'package:vital_step/app/app.locator.dart';
@@ -21,7 +19,7 @@ class SpecialistService {
   final _loginService = locator<LoginService>();
   final _dialogService = locator<DialogService>();
   Future<ProfileSpecialist> getSpecialistProfile() async {
-    final String userId = await _loginService.getUserId();
+    final String userId = (await _loginService.getUserId())!;
     final Response response = await get(
       Uri.parse('$apiBaseUrl/specialist/$userId'),
       headers: <String, String>{'accept': 'application/json'},
@@ -57,7 +55,7 @@ class SpecialistService {
 
   Future<void> addPatient(
       {required String patientEmail, required String patientAccessCode}) async {
-    final String userId = await _loginService.getUserId();
+    final String userId = (await _loginService.getUserId())!;
     final cookie = await box.read("cookie");
     final Response response = await post(
       Uri.parse('$apiBaseUrl/accountAccess/'),
@@ -149,7 +147,7 @@ class SpecialistService {
 
   Future<void> addComment(
       {required String comment, required int assessmentId}) async {
-    final assignerId = box.read("userId");
+    final assignerId = box.read("userId")?.toString() ?? "";
     final cookie = box.read("cookie");
     const url = "$apiBaseUrl/remarks";
     final response = await http.post(Uri.parse(url),
@@ -197,7 +195,7 @@ class SpecialistService {
       'Content-Type': 'application/json',
       "cookie": cookie,
     };
-    final userId = box.read('userId');
+    final userId = box.read('userId')?.toString() ?? "";
     final address = '$apiBaseUrl/specialist/$userId';
     var request = http.Request('PUT', Uri.parse(address));
     var json = signUpInfo.toJson();
@@ -241,8 +239,8 @@ class SpecialistService {
     http.StreamedResponse streamedResponse = await request.send();
     http.Response response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
-      final DialogService _dialogService = locator<DialogService>();
-      _dialogService.showCustomDialog(
+      final DialogService dialogService = locator<DialogService>();
+      dialogService.showCustomDialog(
         variant: DialogType.infoAlert,
         title: 'SignUp Successful ',
         description:

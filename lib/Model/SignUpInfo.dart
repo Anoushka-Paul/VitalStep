@@ -21,7 +21,7 @@ class SignUpInfo with _$SignUpInfo {
     required int height,
     @JsonKey(name: "palm_length") double? palmLength,
     @JsonKey(name: "palm_width") double? palmWidth,
-    @JsonKey(name: "knuckle_length") double? knuckleLength,
+    @JsonKey(name: "knuckles_length") double? knuckleLength,
     @JsonKey(name: "dominant_hand") required String dominantHand,
     required String gender,
   }) = _SignUpInfo;

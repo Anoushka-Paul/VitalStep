@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:vital_step/Model/Assessment.dart';
 import 'package:vital_step/Model/test.dart';
@@ -33,7 +33,7 @@ class AssessmentHistoryView extends StackedView<AssessmentHistoryViewModel> {
           backgroundColor: kcVeryLightGrey,
           elevation: 0,
           title: Text(
-            "${assessment.type}",
+            assessment.type,
             style: const TextStyle(color: kcDarkGreyColor, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
           ),
           centerTitle: true,
@@ -150,9 +150,9 @@ class _TableView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildMetricColumn("Right Hand", rh, kcPrimaryColor),
+              Expanded(child: _buildMetricColumn("Right Hand", rh, kcPrimaryColor)),
               Container(height: 50, width: 1, color: kcLightGrey.withOpacity(0.3)),
-              _buildMetricColumn("Left Hand", lh, kcSecondaryColor),
+              Expanded(child: _buildMetricColumn("Left Hand", lh, kcSecondaryColor)),
             ],
           ),
           const Padding(padding: EdgeInsets.symmetric(vertical: 20), child: Divider(height: 1, color: kcLightGrey)),
@@ -227,15 +227,15 @@ class _TableView extends StatelessWidget {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.history, size: 80, color: kcLightGrey),
+          Icon(Icons.history, size: 80, color: kcLightGrey),
           verticalSpaceMedium,
-          const Text("No History Yet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
+          Text("No History Yet", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
           verticalSpaceSmall,
-          const Text("Complete tests to see your progress here.", textAlign: TextAlign.center, style: TextStyle(color: kcMediumGrey)),
+          Text("Complete tests to see your progress here.", textAlign: TextAlign.center, style: TextStyle(color: kcMediumGrey)),
         ],
       ),
     );
@@ -417,8 +417,8 @@ class _GraphViewState extends State<_GraphView> {
             }
             return const SizedBox();
           })),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         lineBarsData: [
           if (leftSpots.isNotEmpty)
@@ -481,8 +481,8 @@ class _GraphViewState extends State<_GraphView> {
             }
             return const SizedBox();
           })),
-          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
         gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 10, getDrawingHorizontalLine: (v) => FlLine(color: kcLightGrey.withOpacity(0.1), strokeWidth: 1)),
         borderData: FlBorderData(show: false),
@@ -496,15 +496,15 @@ class _GraphViewState extends State<_GraphView> {
       decoration: premiumCardDecoration,
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          title: const Text("How to read this chart?", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
-          leading: const Icon(Icons.help_outline, color: kcSecondaryColor),
+        child: const ExpansionTile(
+          title: Text("How to read this chart?", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: kcDarkGreyColor)),
+          leading: Icon(Icons.help_outline, color: kcSecondaryColor),
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text("• Data is aggregated by the selected period (Week, Month, Year).", style: TextStyle(color: kcMediumGrey, fontSize: 13)),
                   verticalSpaceTiny,
                   Text("• Use the Bar Chart for direct side-by-side hand comparison.", style: TextStyle(color: kcMediumGrey, fontSize: 13)),
@@ -520,9 +520,7 @@ class _GraphViewState extends State<_GraphView> {
   }
 }
 
-// â”€â”€ tiny data classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-// â”€â”€ tiny data classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// --- tiny data classes ---
 class _MonthlyData {
   final List<FlSpot> spots;
   final List<String> labels;

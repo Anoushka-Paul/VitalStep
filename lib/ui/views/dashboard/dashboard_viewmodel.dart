@@ -4,9 +4,13 @@ import 'package:stacked/stacked.dart';
 import 'package:vital_step/Model/test.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/services/api_calls_service.dart';
+import 'package:vital_step/services/mode_service.dart';
+import 'package:vital_step/services/patient_service.dart';
 
 class DashboardViewModel extends BaseViewModel {
   final _apiCallsService = locator<ApiCallsService>();
+  final _modeService = locator<ModeService>();
+  final _patientService = locator<PatientService>();
 
   List<Test> _allTests = [];
 
@@ -36,16 +40,32 @@ class DashboardViewModel extends BaseViewModel {
 
   Timer? _pollingTimer;
 
+  String get dataSourceLabel {
+    if (_modeService.isPatientMode && _modeService.hasActivePatient) {
+      return _modeService.activePatientName ?? 'Patient';
+    }
+    return 'Host';
+  }
+
   Future<void> init() async {
     setBusy(true);
     await refreshData();
     setBusy(false);
-    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) => refreshData());
+    _pollingTimer =
+        Timer.periodic(const Duration(seconds: 15), (_) => refreshData());
   }
 
   Future<void> refreshData() async {
     try {
-      _allTests = await _apiCallsService.getAllUserTests();
+      if (_modeService.isPatientMode && _modeService.hasActivePatient) {
+        // Patient Mode: fetch from new Supabase
+        final readings =
+            await _patientService.getReadings(_modeService.activePatientId!);
+        _allTests = readings.map((r) => r.toTest()).toList();
+      } else {
+        // Host Mode (default): use existing Digital Ocean flow
+        _allTests = await _apiCallsService.getAllUserTests();
+      }
       _calculateStats();
       notifyListeners();
     } catch (_) {}
@@ -59,7 +79,8 @@ class DashboardViewModel extends BaseViewModel {
 
   double _safe(String s) => double.tryParse(s) ?? 0.0;
 
-  double _avg(Test t) => (_safe(t.trial1) + _safe(t.trial2) + _safe(t.trial3)) / 3;
+  double _avg(Test t) =>
+      (_safe(t.trial1) + _safe(t.trial2) + _safe(t.trial3)) / 3;
   double _peak(Test t) => [_safe(t.trial1), _safe(t.trial2), _safe(t.trial3)]
       .reduce((a, b) => a > b ? a : b);
 
@@ -67,7 +88,9 @@ class DashboardViewModel extends BaseViewModel {
     if (_allTests.isEmpty) return;
 
     final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
+    // weekStart at midnight of Monday so all tests taken any time this week are included
+    final today = DateTime(now.year, now.month, now.day);
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
     final lastWeekStart = weekStart.subtract(const Duration(days: 7));
 
     final left = _allTests.where((t) => t.hand == 'Left').toList();
@@ -80,12 +103,19 @@ class DashboardViewModel extends BaseViewModel {
       leftPeak = left.map(_peak).reduce((a, b) => a > b ? a : b);
 
       final lcw = left.where((t) => t.createdAt.isAfter(weekStart)).toList();
-      leftCurrentWeek = lcw.isEmpty ? 0 : lcw.map(_avg).reduce((a, b) => a + b) / lcw.length;
+      // Fall back to all-time average when there are no tests this week
+      // so the main value never shows 0.0
+      leftCurrentWeek = lcw.isNotEmpty
+          ? lcw.map(_avg).reduce((a, b) => a + b) / lcw.length
+          : leftAllTime;
 
       final llw = left
-          .where((t) => t.createdAt.isAfter(lastWeekStart) && t.createdAt.isBefore(weekStart))
+          .where((t) =>
+              t.createdAt.isAfter(lastWeekStart) &&
+              t.createdAt.isBefore(weekStart))
           .toList();
-      leftLastWeek = llw.isEmpty ? 0 : llw.map(_avg).reduce((a, b) => a + b) / llw.length;
+      leftLastWeek =
+          llw.isEmpty ? 0 : llw.map(_avg).reduce((a, b) => a + b) / llw.length;
     }
 
     // ── Right ──
@@ -95,12 +125,18 @@ class DashboardViewModel extends BaseViewModel {
       rightPeak = right.map(_peak).reduce((a, b) => a > b ? a : b);
 
       final rcw = right.where((t) => t.createdAt.isAfter(weekStart)).toList();
-      rightCurrentWeek = rcw.isEmpty ? 0 : rcw.map(_avg).reduce((a, b) => a + b) / rcw.length;
+      // Fall back to all-time average when there are no tests this week
+      rightCurrentWeek = rcw.isNotEmpty
+          ? rcw.map(_avg).reduce((a, b) => a + b) / rcw.length
+          : rightAllTime;
 
       final rlw = right
-          .where((t) => t.createdAt.isAfter(lastWeekStart) && t.createdAt.isBefore(weekStart))
+          .where((t) =>
+              t.createdAt.isAfter(lastWeekStart) &&
+              t.createdAt.isBefore(weekStart))
           .toList();
-      rightLastWeek = rlw.isEmpty ? 0 : rlw.map(_avg).reduce((a, b) => a + b) / rlw.length;
+      rightLastWeek =
+          rlw.isEmpty ? 0 : rlw.map(_avg).reduce((a, b) => a + b) / rlw.length;
     }
 
     // ── Posture breakdown (from real data) ──
@@ -108,17 +144,27 @@ class DashboardViewModel extends BaseViewModel {
     for (final t in _allTests) {
       postureMap.putIfAbsent(t.posture, () => []).add(_avg(t));
     }
-    postureAverages = postureMap.map((k, v) =>
-        MapEntry(k, v.reduce((a, b) => a + b) / v.length));
+    postureAverages = postureMap
+        .map((k, v) => MapEntry(k, v.reduce((a, b) => a + b) / v.length));
 
     // ── Trend sparklines (last 10) ──
     final recentLeft = left.length > 10 ? left.sublist(left.length - 10) : left;
-    final recentRight = right.length > 10 ? right.sublist(right.length - 10) : right;
-    leftSpots = recentLeft.asMap().entries.map((e) => FlSpot(e.key.toDouble(), _avg(e.value))).toList();
-    rightSpots = recentRight.asMap().entries.map((e) => FlSpot(e.key.toDouble(), _avg(e.value))).toList();
+    final recentRight =
+        right.length > 10 ? right.sublist(right.length - 10) : right;
+    leftSpots = recentLeft
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), _avg(e.value)))
+        .toList();
+    rightSpots = recentRight
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), _avg(e.value)))
+        .toList();
 
     totalTests = _allTests.length;
-    thisWeekTests = _allTests.where((t) => t.createdAt.isAfter(weekStart)).length;
+    thisWeekTests =
+        _allTests.where((t) => t.createdAt.isAfter(weekStart)).length;
   }
 
   bool get hasData => _allTests.isNotEmpty;

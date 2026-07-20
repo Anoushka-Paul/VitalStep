@@ -239,8 +239,8 @@ class AssessmentDetailView extends StackedView<AssessmentDetailViewModel> {
       width: double.infinity,
       padding: const EdgeInsets.all(40),
       decoration: premiumCardDecoration,
-      child: Column(
-        children: const [
+      child: const Column(
+        children: [
           Icon(Icons.chat_bubble_outline, size: 40, color: kcLightGrey),
           verticalSpaceSmall,
           Text("No comments yet", style: TextStyle(color: kcMediumGrey)),

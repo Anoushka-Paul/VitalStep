@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -40,6 +39,8 @@ class GraphData {
 }
 
 class AssessmentHistoryPage extends StatefulWidget {
+  const AssessmentHistoryPage({super.key});
+
   @override
   _AssessmentHistoryPageState createState() => _AssessmentHistoryPageState();
 }
@@ -95,16 +96,16 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
   Future<void> _generatePdf() async {
     final pdf = pw.Document();
 
-    final customBlue = PdfColor.fromInt(0xFFBCD5DF);
+    const customBlue = PdfColor.fromInt(0xFFBCD5DF);
     final logoImage = await imageFromAssetBundle('assets/images/logo.jpeg');
-    await Future.delayed(Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 500));
 
     final tableImage = await _captureWidgetAsImage(_graph1Key);
     final graphImage = await _captureWidgetAsImage(_graph2Key);
 
     if (tableImage == null || graphImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error capturing graphs. Please try again.')),
+        const SnackBar(content: Text('Error capturing graphs. Please try again.')),
       );
       return;
     }
@@ -114,11 +115,10 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
         build: (pw.Context context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            if (logoImage != null)
-              pw.Center(
-                child:
-                    pw.Image(pw.MemoryImage(logoImage), width: 80, height: 80),
-              ),
+            pw.Center(
+              child:
+                  pw.Image(pw.MemoryImage(logoImage), width: 80, height: 80),
+            ),
             pw.SizedBox(height: 10),
             pw.Center(
               child: pw.Text(
@@ -170,7 +170,7 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
                         data.average.toString()
                       ])
                   .toList(),
-              headerDecoration: pw.BoxDecoration(color: customBlue),
+              headerDecoration: const pw.BoxDecoration(color: customBlue),
               border: pw.TableBorder.all(width: 1, color: PdfColors.black),
             ),
             pw.SizedBox(height: 20),
@@ -196,7 +196,7 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
                         data.average.toString()
                       ])
                   .toList(),
-              headerDecoration: pw.BoxDecoration(color: customBlue),
+              headerDecoration: const pw.BoxDecoration(color: customBlue),
               border: pw.TableBorder.all(width: 1, color: PdfColors.black),
             ),
             pw.SizedBox(height: 20),
@@ -212,7 +212,7 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
                   graphData.difference.toString()
                 ]
               ],
-              headerDecoration: pw.BoxDecoration(color: customBlue),
+              headerDecoration: const pw.BoxDecoration(color: customBlue),
               border: pw.TableBorder.all(width: 1, color: PdfColors.black),
             ),
             pw.SizedBox(height: 20),
@@ -271,7 +271,7 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text("Assessment History"),
-        actions: [
+        actions: const [
           // IconButton(
           //   icon: const Icon(Icons.picture_as_pdf),
           //   onPressed: _generatePdf,

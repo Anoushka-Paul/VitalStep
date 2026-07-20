@@ -14,56 +14,87 @@ class TestTakingView extends StackedView<TestTakingViewModel> {
     TestTakingViewModel viewModel,
     Widget? child,
   ) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
+    return PopScope(
+      // Intercept system back so it always cancels the test properly
+      // instead of silently popping and leaving a queued assessment.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) viewModel.cancelTest(assessment: assessment);
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: kcDarkGreyColor),
-          onPressed: () => viewModel.cancelTest(assessment: assessment),
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.close_rounded, color: kcDarkGreyColor),
+            onPressed: () => viewModel.cancelTest(assessment: assessment),
+          ),
+          title: const Text(
+            "Grip Test",
+            style: TextStyle(
+                color: kcDarkGreyColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                letterSpacing: -0.5),
+          ),
+          centerTitle: true,
         ),
-        title: const Text(
-          "Grip Test",
-          style: TextStyle(color: kcDarkGreyColor, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: -0.5),
-        ),
-        centerTitle: true,
-      ),
-      body: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 40),
-        child: Column(
-          children: [
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.all(40),
-              decoration: BoxDecoration(
-                color: kcPrimaryColor.withOpacity(0.05),
-                shape: BoxShape.circle,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height -
+                    AppBar().preferredSize.height -
+                    MediaQuery.of(context).padding.top,
               ),
-              child: Image.asset(
-                "assets/test.png",
-                height: 180,
-                width: 180,
-                fit: BoxFit.contain,
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
+                  child: Column(
+                    children: [
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color: kcPrimaryColor.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Image.asset(
+                          "assets/test.png",
+                          height: 140,
+                          width: 140,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      verticalSpaceLarge,
+                      const CircularProgressIndicator(color: kcPrimaryColor),
+                      verticalSpaceMedium,
+                      const Text(
+                        "Waiting for Device Data...",
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: kcPrimaryColor,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      verticalSpaceSmall,
+                      const Text(
+                        "The test is ready. Please perform the squeeze on the device.\n\nThis screen will close automatically once the results are processed.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 14, color: kcMediumGrey, height: 1.5),
+                      ),
+                      const Spacer(),
+                      _buildGuidanceCard(),
+                      verticalSpaceMedium,
+                    ],
+                  ),
+                ),
               ),
             ),
-            verticalSpaceLarge,
-            const Text(
-              "Ready to Start?",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kcDarkGreyColor),
-            ),
-            verticalSpaceSmall,
-            const Text(
-              "Follow the on-screen instructions. Squeeze the dynamometer as hard as you can when prompted.",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: kcMediumGrey, height: 1.5),
-            ),
-            const Spacer(),
-            _buildGuidanceCard(),
-            verticalSpaceLarge,
-            _buildStartButton(viewModel),
-          ],
+          ),
         ),
       ),
     );
@@ -77,47 +108,20 @@ class TestTakingView extends StackedView<TestTakingViewModel> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: kcSecondaryColor.withOpacity(0.1)),
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const Icon(Icons.info_outline, color: kcSecondaryColor),
+          Icon(Icons.info_outline, color: kcSecondaryColor),
           horizontalSpaceSmall,
-          const Expanded(
+          Expanded(
             child: Text(
               "Ensure you are sitting upright with your arm at a 90° angle.",
-              style: TextStyle(fontSize: 13, color: kcSecondaryColor, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  fontSize: 13,
+                  color: kcSecondaryColor,
+                  fontWeight: FontWeight.w500),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildStartButton(TestTakingViewModel vm) {
-    return InkWell(
-      onTap: () => vm.takeTest(assessment),
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: double.infinity,
-        height: 64,
-        decoration: BoxDecoration(
-          gradient: kcPrimaryGradient,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: kcPrimaryColor.withOpacity(0.35),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Center(
-          child: vm.isBusy
-              ? const CircularProgressIndicator(color: Colors.white)
-              : const Text(
-                  "Begin Assessment",
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-        ),
       ),
     );
   }
@@ -127,4 +131,9 @@ class TestTakingView extends StackedView<TestTakingViewModel> {
     BuildContext context,
   ) =>
       TestTakingViewModel();
+
+  @override
+  void onViewModelReady(TestTakingViewModel viewModel) {
+    viewModel.takeTest(assessment);
+  }
 }

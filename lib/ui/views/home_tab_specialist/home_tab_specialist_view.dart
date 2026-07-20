@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:stacked_services/stacked_services.dart';
-import 'package:vital_step/Model/Patient.dart';
 import 'package:vital_step/Model/accounts.dart';
-import 'package:vital_step/Model/profile.dart';
-import 'package:vital_step/app/app.dart';
 import 'package:vital_step/app/app.dialogs.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';

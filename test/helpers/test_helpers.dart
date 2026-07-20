@@ -5,6 +5,7 @@ import 'package:stacked_services/stacked_services.dart';
 import 'package:vital_step/services/login_service.dart';
 import 'package:vital_step/services/accounts_service.dart';
 import 'package:vital_step/services/api_calls_service.dart';
+import 'package:vital_step/services/device_selection_service.dart';
 import 'package:vital_step/services/notifications_service.dart';
 import 'package:vital_step/services/specialist_service.dart';
 // @stacked-import
@@ -18,6 +19,7 @@ import 'test_helpers.mocks.dart';
   MockSpec<LoginService>(onMissingStub: OnMissingStub.returnDefault),
   MockSpec<AccountsService>(onMissingStub: OnMissingStub.returnDefault),
   MockSpec<ApiCallsService>(onMissingStub: OnMissingStub.returnDefault),
+  MockSpec<DeviceSelectionService>(onMissingStub: OnMissingStub.returnDefault),
   MockSpec<NotificationsService>(onMissingStub: OnMissingStub.returnDefault),
   MockSpec<SpecialistService>(onMissingStub: OnMissingStub.returnDefault),
 // @stacked-mock-spec
@@ -29,6 +31,7 @@ void registerServices() {
   getAndRegisterLoginService();
   getAndRegisterAccountsService();
   getAndRegisterApiCallsService();
+  getAndRegisterDeviceSelectionService();
   getAndRegisterNotificationsService();
   getAndRegisterSpecialistService();
 // @stacked-mock-register
@@ -102,6 +105,13 @@ MockApiCallsService getAndRegisterApiCallsService() {
   _removeRegistrationIfExists<ApiCallsService>();
   final service = MockApiCallsService();
   locator.registerSingleton<ApiCallsService>(service);
+  return service;
+}
+
+MockDeviceSelectionService getAndRegisterDeviceSelectionService() {
+  _removeRegistrationIfExists<DeviceSelectionService>();
+  final service = MockDeviceSelectionService();
+  locator.registerSingleton<DeviceSelectionService>(service);
   return service;
 }
 

@@ -1,6 +1,4 @@
-import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/app/app.router.dart';
-import 'package:vital_step/services/specialist_service.dart';
 import 'package:vital_step/ui/common/NavOption.dart' as clickable_nav_option;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -42,7 +40,7 @@ class AccountSpecialistView extends StackedView<AccountSpecialistViewModel> {
                         fontWeight: FontWeight.bold,
                         color: Colors.grey),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   InkWell(
                     onTap: () async {
                       NavigationService().navigateToSignUpSpecialistView(

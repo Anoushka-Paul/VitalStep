@@ -6,7 +6,7 @@ class ScreenHeading extends StatefulWidget {
   Function? callbackFunction;
   Color? color;
   ScreenHeading(
-      {required this.heading,
+      {super.key, required this.heading,
       required this.showBackButton,
       this.color,
       this.callbackFunction});
@@ -26,7 +26,7 @@ class _ScreenHeadingState extends State<ScreenHeading> {
           bottom: 20),
       child: Stack(
         children: [
-          Container(
+          SizedBox(
             height: 30,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +43,7 @@ class _ScreenHeadingState extends State<ScreenHeading> {
               ],
             ),
           ),
-          Container(
+          SizedBox(
             height: 30,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
@@ -56,7 +56,7 @@ class _ScreenHeadingState extends State<ScreenHeading> {
                             widget.callbackFunction!();
                           }
                         },
-                        child: Icon(
+                        child: const Icon(
                           Icons.arrow_back_ios,
                           size: 20,
                         ),

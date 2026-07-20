@@ -98,7 +98,7 @@ class PasswordResetViewView extends StackedView<PasswordResetViewViewModel>
                       controller: emailController,
                     ),
                     verticalSpaceSmall,
-                    Text(
+                    const Text(
                       "just enter your email & we'll send you a temporarily password directly to your inbox so you can log in again easily..",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 8),

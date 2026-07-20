@@ -33,10 +33,19 @@ import 'package:vital_step/ui/views/home_tab_specialist/home_tab_specialist_view
 import 'package:vital_step/ui/views/account_specialist/account_specialist_view.dart';
 import 'package:vital_step/ui/dialogs/add_patient/add_patient_dialog.dart';
 import 'package:vital_step/services/specialist_service.dart';
+import 'package:vital_step/services/device_selection_service.dart';
+import 'package:vital_step/services/connection_manager_service.dart';
 import 'package:vital_step/ui/dialogs/create_assessment/create_assessment_dialog.dart';
 import 'package:vital_step/ui/dialogs/add_comment/add_comment_dialog.dart';
 import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.dart';
 import 'package:vital_step/ui/views/compare/compare_view.dart';
+import 'package:vital_step/services/mode_service.dart';
+import 'package:vital_step/services/patient_service.dart';
+import 'package:vital_step/ui/views/patient_search/patient_search_view.dart';
+import 'package:vital_step/ui/views/patient_registration/patient_registration_view.dart';
+import 'package:vital_step/ui/views/patient_session/patient_session_view.dart';
+import 'package:vital_step/ui/views/patient_history/patient_history_view.dart';
+import 'package:vital_step/ui/views/patient_edit/patient_edit_view.dart';
 // @stacked-import
 
 @StackedApp(
@@ -65,6 +74,11 @@ import 'package:vital_step/ui/views/compare/compare_view.dart';
     MaterialRoute(page: AccountSpecialistView),
     MaterialRoute(page: SignUpSpecialistView),
     MaterialRoute(page: CompareView),
+    MaterialRoute(page: PatientSearchView),
+    MaterialRoute(page: PatientRegistrationView),
+    MaterialRoute(page: PatientSessionView),
+    MaterialRoute(page: PatientHistoryView),
+    MaterialRoute(page: PatientEditView),
 // @stacked-route
   ],
   dependencies: [
@@ -77,6 +91,10 @@ import 'package:vital_step/ui/views/compare/compare_view.dart';
     LazySingleton(classType: ApiCallsService),
     LazySingleton(classType: NotificationsService),
     LazySingleton(classType: SpecialistService),
+    LazySingleton(classType: DeviceSelectionService),
+    LazySingleton(classType: ConnectionManagerService),
+    LazySingleton(classType: ModeService),
+    LazySingleton(classType: PatientService),
 // @stacked-service
   ],
   bottomsheets: [
