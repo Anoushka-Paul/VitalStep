@@ -51,11 +51,37 @@ CREATE TABLE patient_readings (
 CREATE INDEX idx_patient_readings_patient_id ON patient_readings (patient_id);
 CREATE INDEX idx_patient_readings_host_user_id ON patient_readings (host_user_id);
 
+-- â”€â”€â”€ OPTIONAL ML SUPPORT â”€â”€â”€
+-- These columns match the clinical fields already used by the Flutter patient
+-- registration flow. They are deliberately nullable: historical patients can
+-- remain in the database and the model imputes missing measurements.
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS dob DATE;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS dominant_hand TEXT;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS height NUMERIC;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS weight NUMERIC;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS palm_length NUMERIC;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS palm_width NUMERIC;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS knuckle_length NUMERIC;
+
+-- Store a versioned audit record for each server-side model training run.
+-- Do not store a model binary or raw CSV in Supabase.
+CREATE TABLE IF NOT EXISTS ml_model_runs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  model_name TEXT NOT NULL,
+  method TEXT NOT NULL,
+  quantiles JSONB NOT NULL,
+  training_rows INTEGER NOT NULL,
+  source_counts JSONB NOT NULL,
+  artifact_uri TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ─── ROW LEVEL SECURITY ──────────────────────────────────────────────────────
 -- Enable RLS to provide security foundation (policies configured below)
 
 ALTER TABLE research_patients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE patient_readings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ml_model_runs ENABLE ROW LEVEL SECURITY;
 
 -- ─── POLICIES ────────────────────────────────────────────────────────────────
 -- Currently permissive - data isolation enforced at application layer
@@ -63,6 +89,10 @@ ALTER TABLE patient_readings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow all operations" ON research_patients FOR ALL USING (true);
 CREATE POLICY "Allow all operations" ON patient_readings FOR ALL USING (true);
+
+-- Training infrastructure uses the service role and bypasses RLS. The app only
+-- needs to read patient data; it must never write model-run audit records.
+CREATE POLICY "Allow model-run reads" ON ml_model_runs FOR SELECT USING (true);
 
 -- ===============================================================================
 -- Setup Complete

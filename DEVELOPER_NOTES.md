@@ -41,6 +41,22 @@ flutter build appbundle \
 
 If `--dart-define` is not provided, the defaults hardcoded in `main.dart` are used.
 
+### Quantile reference model
+
+The app's original "AI" is deterministic logic in `AnalysisService`; it does not
+use Groq. The optional ML reference range is a separately deployed Python
+service in `ml/`. It trains p05/p50/p95 force models from the approved reference
+CSV plus quality-checked Supabase readings. Configure the app only with its
+HTTPS inference endpoint and client API key:
+
+```bash
+flutter run --dart-define=ML_API_URL=https://ml.example.com \
+  --dart-define=ML_API_KEY=client-inference-key
+```
+
+Never place `SUPABASE_SERVICE_ROLE_KEY`, CSV data, or model training credentials
+in the mobile app. See `ml/README.md` for training and deployment.
+
 ---
 
 ## Dual-Write Pattern

@@ -4,6 +4,8 @@ import 'package:vital_step/Model/test.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/services/api_calls_service.dart';
 import 'package:vital_step/services/analysis_service.dart';
+import 'package:vital_step/services/force_reference_service.dart';
+import 'package:vital_step/Model/force_reference.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vital_step/services/mode_service.dart';
 import 'package:vital_step/services/patient_service.dart';
@@ -18,8 +20,10 @@ class TestResultViewModel extends BaseViewModel {
   final _analysisService = locator<AnalysisService>();
   final _modeService = locator<ModeService>();
   final _patientService = locator<PatientService>();
+  final _forceReferenceService = locator<ForceReferenceService>();
   final _loginService = locator<LoginService>();
   final _box = GetStorage();
+  ForceReference? forceReference;
 
   /// GetStorage key that holds a Set of "patientId:testId" strings already
   /// dual-written, preventing re-writing the same test if the result screen is
@@ -32,8 +36,28 @@ class TestResultViewModel extends BaseViewModel {
     if (test != null) {
       // Trigger dual-write to patient Supabase (non-blocking)
       _handleDualWrite(test!);
+      await _loadForceReference(test!);
     }
     return test;
+  }
+
+  Future<void> _loadForceReference(Test completedTest) async {
+    // A reference needs demographic features. Those are available for the
+    // active research patient, not for a generic host-mode test.
+    if (!_modeService.isPatientMode || !_modeService.hasActivePatient) return;
+    try {
+      final patient =
+          await _patientService.getPatient(_modeService.activePatientId!);
+      if (patient == null) return;
+      forceReference = await _forceReferenceService.getReference(
+        patient: patient,
+        hand: completedTest.hand,
+        posture: completedTest.posture,
+      );
+      notifyListeners();
+    } catch (_) {
+      // Existing rule-based analysis remains the intentional fallback.
+    }
   }
 
   /// Returns a composite key used to deduplicate dual-writes.
@@ -125,6 +149,22 @@ class TestResultViewModel extends BaseViewModel {
 
   String getAiInsight() {
     if (test == null) return "Loading analysis...";
+    final reference = forceReference;
+    if (reference != null) {
+      final average = (double.parse(test!.trial1) +
+              double.parse(test!.trial2) +
+              double.parse(test!.trial3)) /
+          3;
+      final range =
+          '${reference.p05Kg.toStringAsFixed(1)}–${reference.p95Kg.toStringAsFixed(1)} Kg';
+      if (average < reference.p05Kg) {
+        return 'Your ${average.toStringAsFixed(1)} Kg result is below the modelled reference range ($range) for this profile. This is a cohort comparison, not a diagnosis.';
+      }
+      if (average > reference.p95Kg) {
+        return 'Your ${average.toStringAsFixed(1)} Kg result is above the modelled reference range ($range) for this profile.';
+      }
+      return 'Your ${average.toStringAsFixed(1)} Kg result is within the modelled reference range ($range) for this profile.';
+    }
     return _analysisService.analyzeTrials(test!);
   }
 

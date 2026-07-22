@@ -50,9 +50,24 @@ class LoginService {
     var request = http.Request('POST', Uri.parse(requestUrl));
     request.body = json.encode({"email": email, "password": password});
     request.headers.addAll(headers);
+    _logger.i('Sending sign in request to $requestUrl with body ${request.body}');
 
-    http.StreamedResponse streamedResponse = await request.send();
-    http.Response response = await http.Response.fromStream(streamedResponse);
+    http.Response response;
+    try {
+      http.StreamedResponse streamedResponse = await request.send();
+      response = await http.Response.fromStream(streamedResponse);
+    } catch (e) {
+      _logger.e('Network request failed during signIn: $e');
+      _dialogService.showCustomDialog(
+        variant: DialogType.infoAlert,
+        title: 'Error Logging In',
+        description:
+            'Network request failed. Possible causes: backend unreachable, incorrect API base URL, or CORS blocked in the browser. Check your network and `apiBaseUrl` in app_strings.dart.',
+      );
+      return;
+    }
+    
+
     if (response.statusCode == 200) {
       final cookie = response.headers['set-cookie'];
       final json = jsonDecode(response.body);
@@ -112,18 +127,31 @@ class LoginService {
     var headers = {
       'Content-Type': 'application/json',
     };
-    var request = http.Request('POST', Uri.parse('$apiBaseUrl/auth/register'));
+    const requestUrl = '$apiBaseUrl/auth/register';
+    var request = http.Request('POST', Uri.parse(requestUrl));
 
     var signUpJson = signUpInfo.toJson();
     // Remove null or empty values to avoid potential backend rejection
     signUpJson.removeWhere((key, value) => value == null || value == "");
 
     request.body = json.encode(signUpJson);
-    _logger.i('Request body: ${request.body}');
+    _logger.i('Sending sign up request to $requestUrl with body: ${request.body}');
     request.headers.addAll(headers);
 
-    http.StreamedResponse streamedResponse = await request.send();
-    http.Response response = await http.Response.fromStream(streamedResponse);
+    http.Response response;
+    try {
+      http.StreamedResponse streamedResponse = await request.send();
+      response = await http.Response.fromStream(streamedResponse);
+    } catch (e) {
+      _logger.e('Network request failed during signUp: $e');
+      _dialogService.showCustomDialog(
+        variant: DialogType.infoAlert,
+        title: 'Error Signing Up',
+        description:
+            'Network request failed during sign up. Possible causes: backend unreachable, incorrect API base URL, or CORS blocked in the browser. Check your network and `apiBaseUrl` in app_strings.dart.',
+      );
+      return;
+    }
 
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
@@ -218,8 +246,14 @@ class LoginService {
     request.body = json.encode({"email": email, "password": password});
     request.headers.addAll(headers);
 
-    http.StreamedResponse streamedResponse = await request.send();
-    http.Response response = await http.Response.fromStream(streamedResponse);
+    http.Response response;
+    try {
+      http.StreamedResponse streamedResponse = await request.send();
+      response = await http.Response.fromStream(streamedResponse);
+    } catch (e) {
+      _logger.e('Network request failed during getCookie: $e');
+      return null;
+    }
     if (response.statusCode == 200) {
       final cookie = response.headers['set-cookie'];
       return cookie;
@@ -243,8 +277,19 @@ class LoginService {
     request.body = json.encode(signUpInfo.toJson());
     request.headers.addAll(headers);
 
-    http.StreamedResponse streamedResponse = await request.send();
-    http.Response response = await http.Response.fromStream(streamedResponse);
+    http.Response response;
+    try {
+      http.StreamedResponse streamedResponse = await request.send();
+      response = await http.Response.fromStream(streamedResponse);
+    } catch (e) {
+      _logger.e('Network request failed during updateProfile: $e');
+      _dialogService.showCustomDialog(
+        variant: DialogType.infoAlert,
+        title: 'Error Updating Profile',
+        description: 'Network request failed. Please check your connection and try again.',
+      );
+      return;
+    }
     if (response.statusCode == 200) {
       Fluttertoast.showToast(msg: "Profile Updated Successfully");
     } else {

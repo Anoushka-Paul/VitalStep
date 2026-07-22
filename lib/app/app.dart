@@ -41,6 +41,7 @@ import 'package:vital_step/ui/views/sign_up_specialist/sign_up_specialist_view.d
 import 'package:vital_step/ui/views/compare/compare_view.dart';
 import 'package:vital_step/services/mode_service.dart';
 import 'package:vital_step/services/patient_service.dart';
+import 'package:vital_step/services/force_reference_service.dart';
 import 'package:vital_step/ui/views/patient_search/patient_search_view.dart';
 import 'package:vital_step/ui/views/patient_registration/patient_registration_view.dart';
 import 'package:vital_step/ui/views/patient_session/patient_session_view.dart';
@@ -95,6 +96,7 @@ import 'package:vital_step/ui/views/patient_edit/patient_edit_view.dart';
     LazySingleton(classType: ConnectionManagerService),
     LazySingleton(classType: ModeService),
     LazySingleton(classType: PatientService),
+    LazySingleton(classType: ForceReferenceService),
 // @stacked-service
   ],
   bottomsheets: [

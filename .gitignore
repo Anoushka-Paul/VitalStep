@@ -2,6 +2,7 @@
 *.class
 *.log
 *.pyc
+.env
 *.swp
 .DS_Store
 .atom/
@@ -47,3 +48,8 @@ analysis_output.txt
 *.txt
 *.pdf
 *.png
+# Local ML training data and generated model artifacts.
+# Keep clinical/reference datasets and fitted models out of source control.
+/data/*.csv
+/ml/artifacts/
+/.venv/
