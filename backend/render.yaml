@@ -1,0 +1,58 @@
+# Render Deployment Configuration
+# Deploy to: https://render.com
+
+services:
+  # FastAPI Backend Service
+  - type: web
+    name: vitalstep-api
+    runtime: docker
+    plan: starter  # or standard/pro for production
+    region: oregon  # Choose closest region
+    branch: main  # or your deployment branch
+    
+    # Docker configuration
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: API_PREFIX
+        value: /api/v1
+      - key: SUPABASE_URL
+        fromDatabase:
+          name: vitalstep-db
+          property: connectionString
+      - key: SUPABASE_ANON_KEY
+        sync: false  # Set manually in dashboard
+      - key: HUBSPOT_PAT
+        sync: false  # Set manually in dashboard
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://your-app-domain.com,https://www.your-app-domain.com
+    
+    # Health check
+    healthCheckPath: /health/ready
+    
+    # Auto-deploy on push
+    autoDeploy: true
+    
+    # Scaling
+    numInstances: 1  # Increase for production
+    
+    # Disk for ML models (if needed)
+    disk:
+      name: ml-models
+      mountPath: /app/ml/artifacts
+      sizeGB: 1
+
+# Optional: Add Redis for caching (if needed)
+# services:
+#   - type: redis
+#     name: vitalstep-cache
+#     plan: free
+#     maxmemoryPolicy: allkeys-lru

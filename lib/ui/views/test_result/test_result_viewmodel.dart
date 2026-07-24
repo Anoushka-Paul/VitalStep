@@ -12,6 +12,7 @@ import 'package:vital_step/services/patient_service.dart';
 import 'package:vital_step/services/login_service.dart';
 import 'package:vital_step/Model/patient_transfer_objects.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:vital_step/services/hubspot_sync_service.dart';
 
 class TestResultViewModel extends BaseViewModel {
   late Future<Test?> testFuture;
@@ -23,6 +24,7 @@ class TestResultViewModel extends BaseViewModel {
   final _forceReferenceService = locator<ForceReferenceService>();
   final _loginService = locator<LoginService>();
   final _box = GetStorage();
+  final _hubspotSyncService = HubspotSyncService();
   ForceReference? forceReference;
 
   /// GetStorage key that holds a Set of "patientId:testId" strings already
@@ -30,15 +32,41 @@ class TestResultViewModel extends BaseViewModel {
   /// refreshed or revisited.
   static const String _dualWrittenKey = 'dual_written_test_ids';
 
+  /// Temporary switch to keep trial values from being auto-synced to the patient
+  /// record until a manual save action is implemented.
+  static const bool _autoSyncPatientReadings = false;
+
   Future<Test?> initialise() async {
     testFuture = _apiCallsService.getLastTest();
     test = await testFuture;
     if (test != null) {
       // Trigger dual-write to patient Supabase (non-blocking)
       _handleDualWrite(test!);
+      await _syncToHubspot(test!);
       await _loadForceReference(test!);
     }
     return test;
+  }
+
+  Future<void> _syncToHubspot(Test completedTest) async {
+    try {
+      final profile = await _patientService.getPatient(_modeService.activePatientId!);
+      if (profile == null) return;
+
+      final userId = await _loginService.getUserId();
+      if (userId == null || userId.isEmpty) return;
+
+      final accountProfile = await _patientService.getPatient(_modeService.activePatientId!);
+      if (accountProfile == null) return;
+
+      await _hubspotSyncService.syncAppContact(
+        profile: Profile(name: accountProfile.name, phone: accountProfile.contact, dominantHand: null, countryCode: '', weight: 0, height: 0),
+        test: completedTest,
+        patientCode: accountProfile.patientCode,
+      );
+    } catch (_) {
+      // Do not block the UI if HubSpot sync fails.
+    }
   }
 
   Future<void> _loadForceReference(Test completedTest) async {
@@ -96,6 +124,8 @@ class TestResultViewModel extends BaseViewModel {
   /// On failure, the reading is enqueued in the GetStorage retry queue and a
   /// non-blocking toast is shown (Req 4.5). Never throws.
   Future<void> _handleDualWrite(Test test) async {
+    if (!_autoSyncPatientReadings) return;
+
     // Only write to patient Supabase if in Patient Mode with active patient
     if (!_modeService.isPatientMode || !_modeService.hasActivePatient) return;
 

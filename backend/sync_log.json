@@ -1,0 +1,774 @@
+{
+  "total_patients": 112,
+  "synced_count": 105,
+  "skipped_count": 7,
+  "error_count": 0,
+  "synced": [
+    {
+      "patient": "Atish Shetty",
+      "phone": "9663757849",
+      "hubspot_id": "524018072250",
+      "avg": 6.97,
+      "trials": "7.03/6.89/6.99"
+    },
+    {
+      "patient": "Sai Kiran",
+      "phone": "9019319819",
+      "hubspot_id": "523975033560",
+      "avg": 2.75,
+      "trials": "3.21/2.44/2.61"
+    },
+    {
+      "patient": "Rahul C",
+      "phone": "8861779566",
+      "hubspot_id": "524043174634",
+      "avg": 2.01,
+      "trials": "0.95/2.45/2.63"
+    },
+    {
+      "patient": "Dammu Sujith",
+      "phone": "7019847611",
+      "hubspot_id": "523974784718",
+      "avg": 4.39,
+      "trials": "4.26/4.27/4.65"
+    },
+    {
+      "patient": "S.Sahana",
+      "phone": "789251192",
+      "hubspot_id": "524018391789",
+      "avg": 2.46,
+      "trials": "3.01/2.19/2.17"
+    },
+    {
+      "patient": "Sandhya R",
+      "phone": "8553540002",
+      "hubspot_id": "523953531581",
+      "avg": 3.66,
+      "trials": "4.27/3.44/3.27"
+    },
+    {
+      "patient": "Rimon Shijo S G",
+      "phone": "8050709119",
+      "hubspot_id": "524018072263",
+      "avg": 5.2,
+      "trials": "5.19/5.17/5.25"
+    },
+    {
+      "patient": "raja",
+      "phone": "7373792542",
+      "hubspot_id": "524040918720",
+      "avg": 2.11,
+      "trials": "2.19/2.01/2.13"
+    },
+    {
+      "patient": "karthik",
+      "phone": "8681860700",
+      "hubspot_id": "524018723568",
+      "avg": 2.1,
+      "trials": "2.21/2.06/2.04"
+    },
+    {
+      "patient": "Keerthana G",
+      "phone": "8553168801",
+      "hubspot_id": "523994270407",
+      "avg": 3.67,
+      "trials": "3.42/3.87/3.71"
+    },
+    {
+      "patient": "G R Gunashree",
+      "phone": "8217777584",
+      "hubspot_id": "524040182487",
+      "avg": 3.4,
+      "trials": "4.41/2.26/3.53"
+    },
+    {
+      "patient": "Janani B R",
+      "phone": "9108613061",
+      "hubspot_id": "524043913963",
+      "avg": 5.08,
+      "trials": "5.56/4.92/4.76"
+    },
+    {
+      "patient": "Sachin B M",
+      "phone": "6361059844",
+      "hubspot_id": "524018822903",
+      "avg": 2.26,
+      "trials": "2.35/1.92/2.51"
+    },
+    {
+      "patient": "vaibhav Tej S",
+      "phone": "7337815474",
+      "hubspot_id": "523993706177",
+      "avg": 3.02,
+      "trials": "2.84/2.79/3.43"
+    },
+    {
+      "patient": "Thulasi SS",
+      "phone": "9585881677",
+      "hubspot_id": "524043913965",
+      "avg": 2.86,
+      "trials": "2.75/2.85/2.99"
+    },
+    {
+      "patient": "Sai Dharshan",
+      "phone": "8778487726",
+      "hubspot_id": "524018823869",
+      "avg": 2.09,
+      "trials": "2.19/2.07/2.02"
+    },
+    {
+      "patient": "S Fawsia Farhana",
+      "phone": "9740562941",
+      "hubspot_id": "524043071218",
+      "avg": 2.6,
+      "trials": "2.57/2.42/2.81"
+    },
+    {
+      "patient": "Kusha Kumar",
+      "phone": "8951575184",
+      "hubspot_id": "523990934259",
+      "avg": 1.48,
+      "trials": "1.75/1.18/1.52"
+    },
+    {
+      "patient": "Kanika mahajan",
+      "phone": "8874325319",
+      "hubspot_id": "524040370928",
+      "avg": 3.23,
+      "trials": "3.59/3.35/2.74"
+    },
+    {
+      "patient": "Mohan.s",
+      "phone": "7019770628",
+      "hubspot_id": "524018215647",
+      "avg": 4.7,
+      "trials": "5.58/4.3/4.23"
+    },
+    {
+      "patient": "jaideep",
+      "phone": "8892936873",
+      "hubspot_id": "523828602612",
+      "avg": 2.44,
+      "trials": "1.97/2.65/2.69"
+    },
+    {
+      "patient": "morya",
+      "phone": "7075541506",
+      "hubspot_id": "524042091257",
+      "avg": 2.35,
+      "trials": "2.31/2.38/2.35"
+    },
+    {
+      "patient": "Adithya G S",
+      "phone": "8904441026",
+      "hubspot_id": "523993917175",
+      "avg": 2.59,
+      "trials": "2.49/2.36/2.93"
+    },
+    {
+      "patient": "Dhyan KM",
+      "phone": "8310984610",
+      "hubspot_id": "523993709278",
+      "avg": 3.35,
+      "trials": "4.49/3.49/2.08"
+    },
+    {
+      "patient": "soumya n",
+      "phone": "8904033998",
+      "hubspot_id": "524043915985",
+      "avg": 1.69,
+      "trials": "1.38/1.94/1.76"
+    },
+    {
+      "patient": "soumya",
+      "phone": "7204075281",
+      "hubspot_id": "523994096362",
+      "avg": 2.06,
+      "trials": "2.45/2.1/1.62"
+    },
+    {
+      "patient": "Dr Sundari",
+      "phone": "9489717200",
+      "hubspot_id": "523994096364",
+      "avg": 2.89,
+      "trials": "2.99/2.65/3.04"
+    },
+    {
+      "patient": "Darshan M B",
+      "phone": "7892499392",
+      "hubspot_id": "524018624237",
+      "avg": 1.85,
+      "trials": "1.82/1.86/1.87"
+    },
+    {
+      "patient": "Dharshan T",
+      "phone": "8970920864",
+      "hubspot_id": "524039966448",
+      "avg": 2.46,
+      "trials": "2.49/2.38/2.5"
+    },
+    {
+      "patient": "Adarsh M",
+      "phone": "8217413738",
+      "hubspot_id": "524018393804",
+      "avg": 3.52,
+      "trials": "3.1/3.72/3.74"
+    },
+    {
+      "patient": "Dheeraj M",
+      "phone": "9019722922",
+      "hubspot_id": "523994097351",
+      "avg": 5.37,
+      "trials": "6.55/4.9/4.67"
+    },
+    {
+      "patient": "Dheemanth s",
+      "phone": "9880705876",
+      "hubspot_id": "524042092246",
+      "avg": 6.08,
+      "trials": "6.03/6.15/6.05"
+    },
+    {
+      "patient": "Ganesh chidanand biradar",
+      "phone": "8792176942",
+      "hubspot_id": "523993710270",
+      "avg": 3.54,
+      "trials": "4.49/3.42/2.72"
+    },
+    {
+      "patient": "Dhanushree M",
+      "phone": "84",
+      "hubspot_id": "524018393814",
+      "avg": 3.93,
+      "trials": "3.82/3.56/4.4"
+    },
+    {
+      "patient": "Jayaraj N",
+      "phone": "8095259990",
+      "hubspot_id": "523843879617",
+      "avg": 4.13,
+      "trials": "4.43/3.96/4.01"
+    },
+    {
+      "patient": "Aakarsh Kumar P",
+      "phone": "47",
+      "hubspot_id": "524018074361",
+      "avg": 5.86,
+      "trials": "5.03/6.43/6.13"
+    },
+    {
+      "patient": "Asfiya",
+      "phone": "9019718889",
+      "hubspot_id": "524043074245",
+      "avg": 3.14,
+      "trials": "3.28/2.93/3.21"
+    },
+    {
+      "patient": "Arfa Adeeba",
+      "phone": "9845715310",
+      "hubspot_id": "524042092280",
+      "avg": 3.75,
+      "trials": "3.84/3.75/3.66"
+    },
+    {
+      "patient": "Abubakkar Siddiq.A",
+      "phone": "7418651700",
+      "hubspot_id": "523993919206",
+      "avg": 4.86,
+      "trials": "5.02/5.09/4.47"
+    },
+    {
+      "patient": "Amrutha Bhudesh Asuti",
+      "phone": "6362919886",
+      "hubspot_id": "524040919785",
+      "avg": 1.08,
+      "trials": "1.65/0.72/0.88"
+    },
+    {
+      "patient": "Ananya HG Murthy",
+      "phone": "6361743827",
+      "hubspot_id": "524038490860",
+      "avg": 2.29,
+      "trials": "3.54/0.13/3.21"
+    },
+    {
+      "patient": "Ananya bhat",
+      "phone": "7259552844",
+      "hubspot_id": "523989389032",
+      "avg": 1.03,
+      "trials": "1.07/1.02/1.01"
+    },
+    {
+      "patient": "Ananya Ganesh Halemane",
+      "phone": "9113225672",
+      "hubspot_id": "523895387845",
+      "avg": 3.24,
+      "trials": "3.15/3.35/3.22"
+    },
+    {
+      "patient": "Divyashrer T",
+      "phone": "7550360246",
+      "hubspot_id": "524043074277",
+      "avg": 2.05,
+      "trials": "1.97/1.98/2.21"
+    },
+    {
+      "patient": "B Yashaswini",
+      "phone": "9480129733",
+      "hubspot_id": "523990938300",
+      "avg": 1.66,
+      "trials": "1.65/1.47/1.87"
+    },
+    {
+      "patient": "Prakash H",
+      "phone": "6361198065636",
+      "hubspot_id": "524018829013",
+      "avg": 5.35,
+      "trials": "5.78/5.21/5.07"
+    },
+    {
+      "patient": "vanitha",
+      "phone": "7019935426",
+      "hubspot_id": "524018075357",
+      "avg": 0.72,
+      "trials": "0.84/0.7/0.61"
+    },
+    {
+      "patient": "udaysri",
+      "phone": "7483662855",
+      "hubspot_id": "524040185578",
+      "avg": 2.34,
+      "trials": "2.84/1.99/2.19"
+    },
+    {
+      "patient": "G Parveez",
+      "phone": "8073444266",
+      "hubspot_id": "524040486626",
+      "avg": 5.53,
+      "trials": "5.92/5.38/5.3"
+    },
+    {
+      "patient": "akshay",
+      "phone": "7812864259",
+      "hubspot_id": "524042093304",
+      "avg": 3.79,
+      "trials": "4.3/3.98/3.08"
+    },
+    {
+      "patient": "Uday gouda RM",
+      "phone": "9739509048",
+      "hubspot_id": "524042094268",
+      "avg": 6.07,
+      "trials": "6.33/5.88/6.01"
+    },
+    {
+      "patient": "Delna V",
+      "phone": "8838651273",
+      "hubspot_id": "524043075258",
+      "avg": 3.34,
+      "trials": "3.2/3.06/3.76"
+    },
+    {
+      "patient": "Tina Elizabeth",
+      "phone": "9900622996",
+      "hubspot_id": "524041689841",
+      "avg": 4.25,
+      "trials": "4.0/4.05/4.71"
+    },
+    {
+      "patient": "Basava kiran",
+      "phone": "9731315770",
+      "hubspot_id": "524043075272",
+      "avg": 1.93,
+      "trials": "1.98/1.91/1.89"
+    },
+    {
+      "patient": "Ranjit Balan K P",
+      "phone": "9008107773",
+      "hubspot_id": "524038492874",
+      "avg": 5.84,
+      "trials": "5.97/5.55/5.99"
+    },
+    {
+      "patient": "lalitha R",
+      "phone": "9742043139",
+      "hubspot_id": "524043918011",
+      "avg": 2.89,
+      "trials": "3.77/2.5/2.4"
+    },
+    {
+      "patient": "Punitha K",
+      "phone": "8951110974",
+      "hubspot_id": "524043918013",
+      "avg": 3.14,
+      "trials": "3.45/3.0/2.98"
+    },
+    {
+      "patient": "Deekshitg",
+      "phone": "8296705918",
+      "hubspot_id": "523963840245",
+      "avg": 3.15,
+      "trials": "1.79/2.69/4.96"
+    },
+    {
+      "patient": "Shreya KN",
+      "phone": "30072007",
+      "hubspot_id": "524040065759",
+      "avg": 2.87,
+      "trials": "2.75/3.15/2.72"
+    },
+    {
+      "patient": "Sanika s k",
+      "phone": "886134803419",
+      "hubspot_id": "524043918016",
+      "avg": 2.98,
+      "trials": "3.29/2.87/2.77"
+    },
+    {
+      "patient": "V Badrinath",
+      "phone": "8618366743",
+      "hubspot_id": "523990938356",
+      "avg": 5.52,
+      "trials": "5.34/5.44/5.77"
+    },
+    {
+      "patient": "Sachin Y R",
+      "phone": "8971206874",
+      "hubspot_id": "523993921263",
+      "avg": 3.54,
+      "trials": "3.25/3.72/3.66"
+    },
+    {
+      "patient": "Tharun P",
+      "phone": "7899844258",
+      "hubspot_id": "524040065765",
+      "avg": 5.76,
+      "trials": "5.43/6.6/5.25"
+    },
+    {
+      "patient": "Sanjana B K",
+      "phone": "8310001232",
+      "hubspot_id": "524018626280",
+      "avg": 4.64,
+      "trials": "4.86/5.09/3.96"
+    },
+    {
+      "patient": "Pranjal",
+      "phone": "9535384858",
+      "hubspot_id": "524018218719",
+      "avg": 3.46,
+      "trials": "2.92/3.51/3.96"
+    },
+    {
+      "patient": "Nithin s",
+      "phone": "7899288065",
+      "hubspot_id": "524018313936",
+      "avg": 3.34,
+      "trials": "3.06/3.28/3.68"
+    },
+    {
+      "patient": "Nandish kanthi",
+      "phone": "7975658895",
+      "hubspot_id": "524018832094",
+      "avg": 3.38,
+      "trials": "5.09/2.49/2.56"
+    },
+    {
+      "patient": "Lalithashree G",
+      "phone": "7795419225",
+      "hubspot_id": "523963841226",
+      "avg": 1.97,
+      "trials": "2.16/1.87/1.89"
+    },
+    {
+      "patient": "Manjunatha",
+      "phone": "6364197259",
+      "hubspot_id": "523993793233",
+      "avg": 2.67,
+      "trials": "3.35/2.47/2.19"
+    },
+    {
+      "patient": "Manoj ks",
+      "phone": "9611144138",
+      "hubspot_id": "524040821473",
+      "avg": 3.39,
+      "trials": "3.52/3.17/3.49"
+    },
+    {
+      "patient": "Manasa S",
+      "phone": "9380344277",
+      "hubspot_id": "524018628327",
+      "avg": 1.52,
+      "trials": "1.54/1.48/1.53"
+    },
+    {
+      "patient": "manju naii j",
+      "phone": "9353099796",
+      "hubspot_id": "523963841247",
+      "avg": 4.67,
+      "trials": "4.31/5.27/4.42"
+    },
+    {
+      "patient": "Namitha.R",
+      "phone": "8867236036",
+      "hubspot_id": "524040576726",
+      "avg": 2.91,
+      "trials": "3.26/2.09/3.38"
+    },
+    {
+      "patient": "Namitha.R",
+      "phone": "8867236036",
+      "hubspot_id": "524040576726",
+      "avg": 4.85,
+      "trials": "5.56/3.68/5.31"
+    },
+    {
+      "patient": "Mayur M Suryvansi",
+      "phone": "9910357833",
+      "hubspot_id": "523993922253",
+      "avg": 2.72,
+      "trials": "2.75/2.33/3.08"
+    },
+    {
+      "patient": "Anjali",
+      "phone": "8618275817",
+      "hubspot_id": "524018628332",
+      "avg": 2.43,
+      "trials": "2.64/2.13/2.53"
+    },
+    {
+      "patient": "Swetha k",
+      "phone": "8217462235",
+      "hubspot_id": "523963841259",
+      "avg": 5.84,
+      "trials": "5.33/6.18/6.02"
+    },
+    {
+      "patient": "Bhavana",
+      "phone": "9481961998",
+      "hubspot_id": "524018833108",
+      "avg": 3.5,
+      "trials": "3.65/4.1/2.75"
+    },
+    {
+      "patient": "lakkappa uddappagol",
+      "phone": "9353212358",
+      "hubspot_id": "524040487637",
+      "avg": 6.3,
+      "trials": "6.84/6.52/5.53"
+    },
+    {
+      "patient": "kanishk p jalihl",
+      "phone": "9481322460",
+      "hubspot_id": "524043078381",
+      "avg": 6.07,
+      "trials": "6.05/6.24/5.91"
+    },
+    {
+      "patient": "Adilaxmi Shetty",
+      "phone": "6362481407",
+      "hubspot_id": "523963842243",
+      "avg": 4.94,
+      "trials": "5.5/4.51/4.8"
+    },
+    {
+      "patient": "akshay patil",
+      "phone": "9035494394",
+      "hubspot_id": "524038493928",
+      "avg": 5.92,
+      "trials": "7.13/5.41/5.23"
+    },
+    {
+      "patient": "kavya meti",
+      "phone": "9019285902",
+      "hubspot_id": "523994274527",
+      "avg": 2.58,
+      "trials": "2.57/2.42/2.75"
+    },
+    {
+      "patient": "Sudeep",
+      "phone": "9113805688",
+      "hubspot_id": "524040187640",
+      "avg": 3.77,
+      "trials": "4.09/3.62/3.6"
+    },
+    {
+      "patient": "G Reddy priya",
+      "phone": "8073025089",
+      "hubspot_id": "523989391040",
+      "avg": 3.86,
+      "trials": "3.53/3.86/4.18"
+    },
+    {
+      "patient": "Divyashree A",
+      "phone": "8095566701",
+      "hubspot_id": "524042097384",
+      "avg": 4.25,
+      "trials": "3.81/4.69/4.25"
+    },
+    {
+      "patient": "J S Shobha",
+      "phone": "7676488084",
+      "hubspot_id": "524043919063",
+      "avg": 4.88,
+      "trials": "5.37/4.8/4.46"
+    },
+    {
+      "patient": "Iffat Fatima",
+      "phone": "8123537007",
+      "hubspot_id": "524018077403",
+      "avg": 5.75,
+      "trials": "5.58/5.92/5.76"
+    },
+    {
+      "patient": "kiran N",
+      "phone": "9632413099",
+      "hubspot_id": "523989391045",
+      "avg": 3.22,
+      "trials": "3.3/3.11/3.24"
+    },
+    {
+      "patient": "Kushal M K",
+      "phone": "9080310839",
+      "hubspot_id": "523963843312",
+      "avg": 6.08,
+      "trials": "6.17/5.9/6.18"
+    },
+    {
+      "patient": "dinesh",
+      "phone": "6363216319",
+      "hubspot_id": "524018396865",
+      "avg": 6.0,
+      "trials": "6.25/4.63/7.13"
+    },
+    {
+      "patient": "Anjali Kotian",
+      "phone": "9632274326",
+      "hubspot_id": "523994274549",
+      "avg": 2.88,
+      "trials": "2.78/3.24/2.61"
+    },
+    {
+      "patient": "Pramodh H S",
+      "phone": "2026",
+      "hubspot_id": "523972770523",
+      "avg": 4.44,
+      "trials": "4.6/4.54/4.17"
+    },
+    {
+      "patient": "dr. basavaraj GK",
+      "phone": "9741345013",
+      "hubspot_id": "524041691857",
+      "avg": 6.27,
+      "trials": "6.27/6.26/6.29"
+    },
+    {
+      "patient": "jayshree kumari",
+      "phone": "9844036161",
+      "hubspot_id": "523895390958",
+      "avg": 2.75,
+      "trials": "2.31/3.14/2.8"
+    },
+    {
+      "patient": "Anoushka Paul",
+      "phone": "9035220410",
+      "hubspot_id": "523990942402",
+      "avg": 3.7,
+      "trials": "3.97/3.23/3.9"
+    },
+    {
+      "patient": "keerthi5",
+      "phone": "9663517772",
+      "hubspot_id": "524042098362",
+      "avg": 5.89,
+      "trials": "6.28/6.49/4.89"
+    },
+    {
+      "patient": "Boobash R",
+      "phone": "9042592542",
+      "hubspot_id": "524040576758",
+      "avg": 4.47,
+      "trials": "3.84/4.86/4.72"
+    },
+    {
+      "patient": "Balasubrahmanya H V",
+      "phone": "7975354219",
+      "hubspot_id": "523990942412",
+      "avg": 4.7,
+      "trials": "4.88/4.6/4.61"
+    },
+    {
+      "patient": "Anup M Upadhyaya",
+      "phone": "9481213596",
+      "hubspot_id": "524043079377",
+      "avg": 10.85,
+      "trials": "11.09/10.25/11.21"
+    },
+    {
+      "patient": "Laya Tojo",
+      "phone": "9448375862",
+      "hubspot_id": "524040376012",
+      "avg": 2.41,
+      "trials": "2.12/2.83/2.29"
+    },
+    {
+      "patient": "Chandan Reddy",
+      "phone": "540",
+      "hubspot_id": "523994099413",
+      "avg": 4.69,
+      "trials": "4.75/5.09/4.22"
+    },
+    {
+      "patient": "deekshi",
+      "phone": "7411696969",
+      "hubspot_id": "523843882686",
+      "avg": 3.12,
+      "trials": "2.21/3.53/3.63"
+    },
+    {
+      "patient": "Sumukh",
+      "phone": "8975432107",
+      "hubspot_id": "524018221801",
+      "avg": 2.65,
+      "trials": "2.57/2.46/2.91"
+    },
+    {
+      "patient": "chetanV",
+      "phone": "9916387717",
+      "hubspot_id": "523843882694",
+      "avg": 3.83,
+      "trials": "4.29/3.17/4.04"
+    }
+  ],
+  "skipped": [
+    {
+      "patient": "aruna",
+      "reason": "no_readings"
+    },
+    {
+      "patient": "Chetan",
+      "reason": "no_readings"
+    },
+    {
+      "patient": "Delna V",
+      "reason": "no_readings"
+    },
+    {
+      "patient": "Tina Elizabeth",
+      "reason": "no_readings"
+    },
+    {
+      "patient": "Sheeba Kumari C",
+      "reason": "no_valid_phone"
+    },
+    {
+      "patient": "Vijaya Lakshmi v s",
+      "reason": "no_valid_phone"
+    },
+    {
+      "patient": "Preeta Sharan",
+      "reason": "no_valid_phone"
+    }
+  ],
+  "errors": []
+}

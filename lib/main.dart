@@ -79,24 +79,25 @@ Future<void> main() async {
       locator<NotificationsService>();
   notificationsService.handleNotification();
 
+  String initialRoute = Routes.startupView;
+
+  // Initialize notification plugin first; on desktop this must happen before
+  // querying launch details.
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings,
+      onDidReceiveNotificationResponse:
+          (NotificationResponse notificationResponse) async {
+    await notificationsService.handleNotification();
+  }, onDidReceiveBackgroundNotificationResponse: notificationTapBackground);
+
   //for terminated state
   final NotificationAppLaunchDetails? notificationAppLaunchDetails =
       await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
-  String initialRoute = Routes.startupView;
-
   final response = notificationAppLaunchDetails?.notificationResponse;
   if (response != null) {
     initialRoute = Routes.assesmentView;
   }
 
   runApp(MainApp(initialRoute: initialRoute));
-
-//for foreground and background
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-      onDidReceiveNotificationResponse:
-          (NotificationResponse notificationResponse) async {
-    await notificationsService.handleNotification();
-  }, onDidReceiveBackgroundNotificationResponse: notificationTapBackground);
 }
 
 class MainApp extends StatelessWidget {
