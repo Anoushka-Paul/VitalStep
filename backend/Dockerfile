@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY ./app ./app
+COPY hubspot_utils.py ./hubspot_utils.py
 COPY ./ml/artifacts ./ml/artifacts
 
 # Create non-root user
