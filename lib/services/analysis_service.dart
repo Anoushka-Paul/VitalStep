@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vital_step/Model/test.dart';
+import 'package:vital_step/Model/profile.dart';
+import 'recommendation_service.dart';
 
 /// Structured result from a hand-comparison analysis.
 class CompareResult {
@@ -27,8 +29,13 @@ class CompareResult {
 }
 
 class AnalysisService {
+  final _recommendationService = RecommendationService();
+
+  /// Public method to access recommendation service
+  RecommendationService get recommendationService => _recommendationService;
+
   /// Analyzes a set of trials and returns an insight string.
-  String analyzeTrials(Test test) {
+  String analyzeTrials(Test test, {Profile? profile}) {
     try {
       final t1 = double.parse(test.trial1);
       final t2 = double.parse(test.trial2);
@@ -58,7 +65,8 @@ class AnalysisService {
   }
 
   /// Returns a structured comparison result for Left vs Right hand.
-  CompareResult compareHandsStructured(double leftAvg, double rightAvg, String dominantHand) {
+  /// [profile] is optional - if provided, uses new recommendation system
+  CompareResult compareHandsStructured(double leftAvg, double rightAvg, String dominantHand, {Profile? profile}) {
     if (leftAvg == 0 && rightAvg == 0) {
       return const CompareResult(
         balanceScore: 0,
@@ -116,41 +124,70 @@ class AnalysisService {
     Color severityColor;
     String headline;
     String explanation;
-    final List<String> recs = [];
+    List<String> recs = [];
 
-    if (percentDiff <= 10) {
-      severity = 'Balanced ✓';
-      severityColor = const Color(0xFF4CAF50);
-      headline = 'Excellent hand balance!';
-      explanation = 'Your hands differ by only ${percentDiff.toStringAsFixed(1)}%, which is within the healthy range (≤10%). Both hands are working well together.';
-      recs.add('Keep up the consistent bilateral training.');
-      recs.add('Continue monitoring weekly to maintain this balance.');
-    } else if (percentDiff <= 20) {
-      severity = 'Mild Imbalance';
-      severityColor = const Color(0xFFFF9800);
-      headline = '$strongerHand hand is ${percentDiff.toStringAsFixed(0)}% stronger';
-      explanation = 'There is a mild difference of ${percentDiff.toStringAsFixed(1)}% between your hands. A difference up to 10% is normal; yours is slightly above that. This can often improve with targeted exercises.';
-      recs.add('Add 2 extra sets of $weakerHand hand exercises per session.');
-      recs.add('Avoid overloading the $strongerHand hand — let the $weakerHand hand catch up.');
-      recs.add('Light grip exercises with a stress ball for the $weakerHand hand, 3× daily.');
-    } else if (percentDiff <= 30) {
-      severity = 'Moderate Imbalance';
-      severityColor = const Color(0xFFFF5722);
-      headline = '$weakerHand hand is notably weaker (${percentDiff.toStringAsFixed(0)}%)';
-      explanation = 'Your $weakerHand hand (${weakerAvg.toStringAsFixed(1)} Kg) is ${percentDiff.toStringAsFixed(1)}% weaker than your $strongerHand hand (${strongerAvg.toStringAsFixed(1)} Kg). This level of imbalance may affect daily activities and should be addressed with a physiotherapist.';
-      recs.add('Consult a physiotherapist for a targeted $weakerHand hand strengthening plan.');
-      recs.add('Practice unilateral exercises focusing only on the $weakerHand hand.');
-      recs.add('Wrist and forearm stretches daily — hold each stretch for 30 seconds.');
-      recs.add('Re-test every 2 weeks to track improvement.');
+    // Use new recommendation system if profile is provided
+    if (profile != null) {
+      // Create a mock test for the weaker hand to get recommendations
+      final mockTest = Test(
+        id: 0,
+        userId: 0,
+        deviceId: 0,
+        assestmentId: 0,
+        posture: 'Sitting', // Default posture
+        trial1: weakerAvg.toString(),
+        trial2: weakerAvg.toString(),
+        trial3: weakerAvg.toString(),
+        hand: weakerHand,
+        createdAt: DateTime.now(),
+      );
+
+      final recommendations = _recommendationService.generateRecommendations(
+        profile: profile,
+        test: mockTest,
+      );
+
+      severity = _mapSeverityTierToDisplay(recommendations['severity_tier']);
+      severityColor = _getSeverityColor(percentDiff);
+      headline = _getHeadline(weakerHand, strongerHand, percentDiff);
+      explanation = recommendations['insight'];
+      recs = _recommendationService.formatRecommendationsForDisplay(recommendations);
     } else {
-      severity = 'Significant Imbalance';
-      severityColor = const Color(0xFFF44336);
-      headline = 'Significant weakness in $weakerHand hand (${percentDiff.toStringAsFixed(0)}%)';
-      explanation = 'Your $weakerHand hand (${weakerAvg.toStringAsFixed(1)} Kg) is ${percentDiff.toStringAsFixed(1)}% weaker than your $strongerHand hand (${strongerAvg.toStringAsFixed(1)} Kg). This is a significant difference that may indicate muscle weakness, injury, or nerve issues. Medical evaluation is recommended.';
-      recs.add('See a doctor or physiotherapist — this level of imbalance needs professional assessment.');
-      recs.add('Do not overcompensate with the $strongerHand hand to avoid overuse injury.');
-      recs.add('Begin very gentle $weakerHand hand exercises only after professional clearance.');
-      recs.add('Retest weekly and log your progress carefully.');
+      // Fallback to old logic
+      if (percentDiff <= 10) {
+        severity = 'Balanced ✓';
+        severityColor = const Color(0xFF4CAF50);
+        headline = 'Excellent hand balance!';
+        explanation = 'Your hands differ by only ${percentDiff.toStringAsFixed(1)}%, which is within the healthy range (≤10%). Both hands are working well together.';
+        recs.add('Keep up the consistent bilateral training.');
+        recs.add('Continue monitoring weekly to maintain this balance.');
+      } else if (percentDiff <= 20) {
+        severity = 'Mild Imbalance';
+        severityColor = const Color(0xFFFF9800);
+        headline = '$strongerHand hand is ${percentDiff.toStringAsFixed(0)}% stronger';
+        explanation = 'There is a mild difference of ${percentDiff.toStringAsFixed(1)}% between your hands. A difference up to 10% is normal; yours is slightly above that. This can often improve with targeted exercises.';
+        recs.add('Add 2 extra sets of $weakerHand hand exercises per session.');
+        recs.add('Avoid overloading the $strongerHand hand — let the $weakerHand hand catch up.');
+        recs.add('Light grip exercises with a stress ball for the $weakerHand hand, 3× daily.');
+      } else if (percentDiff <= 30) {
+        severity = 'Moderate Imbalance';
+        severityColor = const Color(0xFFFF5722);
+        headline = '$weakerHand hand is notably weaker (${percentDiff.toStringAsFixed(0)}%)';
+        explanation = 'Your $weakerHand hand (${weakerAvg.toStringAsFixed(1)} Kg) is ${percentDiff.toStringAsFixed(1)}% weaker than your $strongerHand hand (${strongerAvg.toStringAsFixed(1)} Kg). This level of imbalance may affect daily activities and should be addressed with a physiotherapist.';
+        recs.add('Consult a physiotherapist for a targeted $weakerHand hand strengthening plan.');
+        recs.add('Practice unilateral exercises focusing only on the $weakerHand hand.');
+        recs.add('Wrist and forearm stretches daily — hold each stretch for 30 seconds.');
+        recs.add('Re-test every 2 weeks to track improvement.');
+      } else {
+        severity = 'Significant Imbalance';
+        severityColor = const Color(0xFFF44336);
+        headline = 'Significant weakness in $weakerHand hand (${percentDiff.toStringAsFixed(0)}%)';
+        explanation = 'Your $weakerHand hand (${weakerAvg.toStringAsFixed(1)} Kg) is ${percentDiff.toStringAsFixed(1)}% weaker than your $strongerHand hand (${strongerAvg.toStringAsFixed(1)} Kg). This is a significant difference that may indicate muscle weakness, injury, or nerve issues. Medical evaluation is recommended.';
+        recs.add('See a doctor or physiotherapist — this level of imbalance needs professional assessment.');
+        recs.add('Do not overcompensate with the $strongerHand hand to avoid overuse injury.');
+        recs.add('Begin very gentle $weakerHand hand exercises only after professional clearance.');
+        recs.add('Retest weekly and log your progress carefully.');
+      }
     }
 
     return CompareResult(
@@ -166,9 +203,57 @@ class AnalysisService {
     );
   }
 
+  /// Helper method to map severity tier to display string
+  String _mapSeverityTierToDisplay(String severityTier) {
+    switch (severityTier) {
+      case 'Severe Low':
+        return 'Significant Imbalance';
+      case 'Mild Low':
+        return 'Mild Imbalance';
+      case 'Normal - Low Side':
+        return 'Mild Imbalance';
+      case 'Normal - Sweet Spot':
+        return 'Balanced ✓';
+      case 'Normal - High Side':
+        return 'Mild Imbalance';
+      case 'Mild High':
+        return 'Mild Imbalance';
+      case 'Severe High':
+        return 'Significant Imbalance';
+      default:
+        return 'Moderate Imbalance';
+    }
+  }
+
+  /// Helper method to get severity color based on percent difference
+  Color _getSeverityColor(double percentDiff) {
+    if (percentDiff <= 10) {
+      return const Color(0xFF4CAF50); // Green
+    } else if (percentDiff <= 20) {
+      return const Color(0xFFFF9800); // Orange
+    } else if (percentDiff <= 30) {
+      return const Color(0xFFFF5722); // Deep Orange
+    } else {
+      return const Color(0xFFF44336); // Red
+    }
+  }
+
+  /// Helper method to generate headline
+  String _getHeadline(String weakerHand, String strongerHand, double percentDiff) {
+    if (percentDiff <= 10) {
+      return 'Excellent hand balance!';
+    } else if (percentDiff <= 20) {
+      return '$strongerHand hand is ${percentDiff.toStringAsFixed(0)}% stronger';
+    } else if (percentDiff <= 30) {
+      return '$weakerHand hand is notably weaker (${percentDiff.toStringAsFixed(0)}%)';
+    } else {
+      return 'Significant weakness in $weakerHand hand (${percentDiff.toStringAsFixed(0)}%)';
+    }
+  }
+
   /// Legacy simple string compare (still used by existing callers)
-  String compareHands(double leftAvg, double rightAvg, String dominantHand) {
-    return compareHandsStructured(leftAvg, rightAvg, dominantHand).headline;
+  String compareHands(double leftAvg, double rightAvg, String dominantHand, {Profile? profile}) {
+    return compareHandsStructured(leftAvg, rightAvg, dominantHand, profile: profile).headline;
   }
 
   /// Calculates the current health streak based on test dates.
@@ -221,7 +306,17 @@ class AnalysisService {
   }
 
   /// Provides AI-generated recovery tips based on test results.
-  List<String> getRecoveryTips(Test test) {
+  /// Uses the new recommendation service if profile is provided
+  List<String> getRecoveryTips(Test test, {Profile? profile}) {
+    if (profile != null) {
+      final recommendations = _recommendationService.generateRecommendations(
+        profile: profile,
+        test: test,
+      );
+      return _recommendationService.formatRecommendationsForDisplay(recommendations);
+    }
+
+    // Fallback to old logic
     final t1 = double.parse(test.trial1);
     final t2 = double.parse(test.trial2);
     final t3 = double.parse(test.trial3);

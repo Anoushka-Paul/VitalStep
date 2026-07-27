@@ -1,6 +1,7 @@
 import 'package:get_storage/get_storage.dart';
 import 'package:stacked/stacked.dart';
 import 'package:vital_step/Model/test.dart';
+import 'package:vital_step/Model/profile.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/services/api_calls_service.dart';
 import 'package:vital_step/services/analysis_service.dart';
@@ -177,8 +178,29 @@ class TestResultViewModel extends BaseViewModel {
     }
   }
 
-  String getAiInsight() {
+  Future<String> getAiInsight() async {
     if (test == null) return "Loading analysis...";
+    
+    // Try to get profile for personalized recommendations
+    Profile? profile;
+    try {
+      final patientProfile = await _patientService.getPatient(_modeService.activePatientId!);
+      if (patientProfile != null) {
+        profile = Profile(
+          name: patientProfile.name,
+          phone: patientProfile.contact,
+          countryCode: '',
+          weight: patientProfile.weight ?? 70,
+          height: patientProfile.height ?? 170,
+          dominantHand: patientProfile.dominantHand,
+          gender: patientProfile.gender,
+          dob: patientProfile.dob,
+        );
+      }
+    } catch (e) {
+      // Continue without profile
+    }
+    
     final reference = forceReference;
     if (reference != null) {
       final average = (double.parse(test!.trial1) +
@@ -195,12 +217,43 @@ class TestResultViewModel extends BaseViewModel {
       }
       return 'Your ${average.toStringAsFixed(1)} Kg result is within the modelled reference range ($range) for this profile.';
     }
+    
+    // Use new recommendation service if profile available
+    if (profile != null) {
+      final recommendations = _analysisService.recommendationService.generateRecommendations(
+        profile: profile,
+        test: test!,
+      );
+      return recommendations['insight'] ?? _analysisService.analyzeTrials(test!);
+    }
+    
     return _analysisService.analyzeTrials(test!);
   }
 
-  List<String> getRecoveryTips() {
+  Future<List<String>> getRecoveryTips() async {
     if (test == null) return [];
-    return _analysisService.getRecoveryTips(test!);
+    
+    // Try to get profile for personalized recommendations
+    Profile? profile;
+    try {
+      final patientProfile = await _patientService.getPatient(_modeService.activePatientId!);
+      if (patientProfile != null) {
+        profile = Profile(
+          name: patientProfile.name,
+          phone: patientProfile.contact,
+          countryCode: '',
+          weight: patientProfile.weight ?? 70,
+          height: patientProfile.height ?? 170,
+          dominantHand: patientProfile.dominantHand,
+          gender: patientProfile.gender,
+          dob: patientProfile.dob,
+        );
+      }
+    } catch (e) {
+      // Continue without profile
+    }
+    
+    return _analysisService.getRecoveryTips(test!, profile: profile);
   }
 
   String getDate(DateTime createdAt) {

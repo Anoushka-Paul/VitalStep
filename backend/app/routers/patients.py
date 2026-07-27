@@ -2,6 +2,8 @@
 Patients Router
 Handles patient CRUD operations and trial readings
 """
+import os
+import sys
 import time
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status, Query
@@ -15,6 +17,15 @@ from app.schemas import (
 )
 from app.database import PatientRepository, TrialReadingRepository
 from app.logging_config import log_request, log_response, log_error
+
+# Add backend directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from hubspot_utils import (
+    normalize_phone,
+    ensure_contact_properties,
+    upsert_contact_by_phone,
+    is_email as hubspot_is_email,
+)
 
 router = APIRouter(prefix="/patients", tags=["Patients"])
 
@@ -110,6 +121,69 @@ async def create_patient(patient: PatientCreate, database: str = "primary"):
         created_patient = repo.create(patient_data)
         
         log_response(created_patient, router.logger)
+        
+        # Auto-sync to HubSpot (non-blocking)
+        try:
+            contact = created_patient.get("contact", "")
+            if contact:
+                email = ""
+                phone = ""
+                if hubspot_is_email(contact):
+                    email = contact
+                else:
+                    phone = normalize_phone(contact)
+                
+                if phone or email:
+                    first_name = created_patient.get("name", "").split()[0] if created_patient.get("name") else "Patient"
+                    last_name = " ".join(created_patient.get("name", "").split()[1:]) if created_patient.get("name") and " " in created_patient.get("name") else ""
+                    
+                    # Ensure HubSpot properties exist
+                    ensure_contact_properties()
+                    
+                    # Create/update contact in HubSpot
+                    contact_id, _ = upsert_contact_by_phone(phone, first_name, last_name, email)
+                    
+                    # Update with additional fields
+                    update_payload = {
+                        "properties": {
+                            "firstname": first_name,
+                            "lastname": last_name,
+                            "phone": phone,
+                            "email": email,
+                            "device_id": created_patient.get("host_user_id"),
+                        }
+                    }
+                    
+                    # Add optional fields
+                    if created_patient.get("age"):
+                        update_payload["properties"]["age"] = str(created_patient.get("age"))
+                    if created_patient.get("gender"):
+                        update_payload["properties"]["gender"] = created_patient.get("gender")
+                    if created_patient.get("patient_code"):
+                        update_payload["properties"]["patient_code"] = created_patient.get("patient_code")
+                    if created_patient.get("dominant_hand"):
+                        update_payload["properties"]["dominant_hand"] = created_patient.get("dominant_hand")
+                    if created_patient.get("condition"):
+                        update_payload["properties"]["condition"] = created_patient.get("condition")
+                    if created_patient.get("dob"):
+                        update_payload["properties"]["test_date"] = created_patient.get("dob")
+                    
+                    # Make HubSpot API call
+                    import requests
+                    from dotenv import load_dotenv
+                    load_dotenv()
+                    hubspot_pat = os.getenv("HUBSPOT_PAT")
+                    
+                    if hubspot_pat:
+                        headers = {
+                            "Authorization": f"Bearer {hubspot_pat}",
+                            "Content-Type": "application/json",
+                        }
+                        url = f"https://api.hubapi.com/crm/v3/objects/contacts/{contact_id}"
+                        requests.patch(url, headers=headers, json=update_payload, timeout=10)
+        except Exception as exc:
+            # Log but don't fail patient creation if HubSpot sync fails
+            log_error(exc, router.logger, {"patient_id": created_patient.get("id"), "hubspot_sync": True})
         
         return created_patient
     except HTTPException:

@@ -1,12 +1,14 @@
 """
 Bulk sync script to upload ALL existing Supabase patient data to HubSpot.
 This bypasses the 20-record limit and syncs everything.
-Uses normalized phone numbers to prevent duplicates.
+Uses phone+email deduplication to prevent duplicates.
+Sends webhook notification after each sync.
 """
 import os
 import sys
 import json
 import time
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,41 +20,36 @@ from hubspot_utils import (
     normalize_phone,
     ensure_contact_properties,
     find_contact_by_phone,
+    find_contact_by_email,
     upsert_contact_by_phone,
 )
 
+# Webhook configuration
+HUBSPOT_WEBHOOK_URL = "https://api.hubapi.com/automation/v4/webhook-triggers/246752206/eErzGjs"
 
-def ensure_contact_properties() -> None:
-    """Ensure all custom properties exist in HubSpot."""
-    for name, label, prop_type, field_type in [
-        ("dominant_hand", "Dominant Hand", "string", "text"),
-        ("patient_code", "Patient Code", "string", "text"),
-        ("age", "Age", "number", "number"),
-        ("test_date", "Test Date", "datetime", "date"),
-        ("posture", "Posture", "string", "text"),
-        ("trial_1", "Trial 1", "number", "number"),
-        ("trial_2", "Trial 2", "number", "number"),
-        ("trial_3", "Trial 3", "number", "number"),
-        ("average_trial", "Average Trial", "number", "number"),
-        ("average_kg", "Average KG", "number", "number"),
-        ("created_at", "Created At", "datetime", "date"),
-    ]:
-        payload = {
-            "name": name,
-            "label": label,
-            "type": prop_type,
-            "fieldType": field_type,
-            "groupName": "contactinformation",
-        }
-        try:
-            hubspot_request("/crm/v3/properties/contacts", method="POST", payload=payload)
-            print(f"✓ Created property: {name}")
-        except Exception as exc:
-            message = str(exc).lower()
-            if "already exists" not in message and "duplicate" not in message and "400" not in message:
-                print(f"✗ Error creating property {name}: {exc}")
-            else:
-                print(f"✓ Property already exists: {name}")
+
+def is_email(contact: str) -> bool:
+    """Check if the contact string is an email address."""
+    if not contact:
+        return False
+    return "@" in contact and "." in contact
+
+
+def send_webhook_notification(patient_data: dict):
+    """Send webhook notification to HubSpot after successful sync."""
+    try:
+        response = requests.post(
+            HUBSPOT_WEBHOOK_URL,
+            json=patient_data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        if response.ok:
+            print(f"  ✓ Webhook sent successfully")
+        else:
+            print(f"  ⚠ Webhook failed: {response.status_code}")
+    except Exception as exc:
+        print(f"  ⚠ Webhook error: {exc}")
 
 
 def sync_all_patients():
@@ -65,11 +62,11 @@ def sync_all_patients():
     print("\n[1/4] Ensuring HubSpot contact properties exist...")
     ensure_contact_properties()
     
-    # Step 2: Fetch ALL patients (no limit)
+    # Step 2: Fetch ALL patients with all required fields
     print("\n[2/4] Fetching ALL patients from Supabase...")
     try:
         patients = supabase_request("/rest/v1/research_patients", params={
-            "select": "id,name,contact",
+            "select": "id,name,contact,age,gender,patient_code,dominant_hand,condition,dob,created_at,host_user_id",
             "order": "created_at.desc"
         })
         print(f"  Found {len(patients)} total patients")
@@ -96,97 +93,193 @@ def sync_all_patients():
             skipped.append({"patient": name, "reason": "missing_id_or_contact"})
             continue
         
-        # Fetch latest reading for this patient
+        # Determine if contact is email or phone
+        email = ""
+        phone = ""
+        if is_email(contact):
+            email = contact
+            print(f"  [{idx}/{len(patients)}] ℹ {name}: Contact is email ({contact})")
+        else:
+            phone = normalize_phone(contact)
+            if not phone:
+                skipped.append({"patient": name, "reason": "no_valid_phone"})
+                continue
+            print(f"  [{idx}/{len(patients)}] ℹ {name}: Contact is phone ({contact} -> {phone})")
+        
+        # Fetch ALL readings for this patient (to group by hand)
         try:
-            readings = supabase_request(
+            all_readings = supabase_request(
                 "/rest/v1/patient_readings",
                 params={
                     "select": "trial1,trial2,trial3,hand,posture,assessment_type,created_at",
                     "patient_id": f"eq.{patient_id}",
-                    "order": "created_at.desc",
-                    "limit": "1"
+                    "order": "created_at.desc"
                 }
             )
         except Exception as exc:
             errors.append({"patient": name, "error": f"Failed to fetch readings: {exc}"})
             continue
         
-        if not readings:
+        # Get condition from patient data
+        condition = patient.get("condition", "") or ""
+        
+        if not all_readings:
             skipped.append({"patient": name, "reason": "no_readings"})
             continue
         
-        latest = readings[0]
+        # Group readings by hand
+        left_readings = []
+        right_readings = []
+        for reading in all_readings:
+            hand_type = reading.get("hand", "").lower()
+            if hand_type == "left":
+                left_readings.append(reading)
+            elif hand_type == "right":
+                right_readings.append(reading)
         
-        # Extract trial values
-        try:
-            trial1 = float(latest.get("trial1", 0))
-            trial2 = float(latest.get("trial2", 0))
-            trial3 = float(latest.get("trial3", 0))
-        except Exception:
-            skipped.append({"patient": name, "reason": "invalid_trial_data"})
-            continue
+        # Calculate averages for each hand
+        def calculate_average(readings):
+            if not readings:
+                return None
+            try:
+                trials = [float(r.get("trial1", 0)) for r in readings]
+                return round(sum(trials) / len(trials), 2)
+            except:
+                return None
         
-        average = round((trial1 + trial2 + trial3) / 3, 2)
+        left_avg = calculate_average(left_readings)
+        right_avg = calculate_average(right_readings)
         
-        # Normalize phone number
-        phone = normalize_phone(contact) if contact else ""
+        # Get latest reading for metadata (posture, etc.)
+        latest = all_readings[0]
         
-        if not phone:
-            skipped.append({"patient": name, "reason": "no_valid_phone"})
-            continue
-        
-        # Upsert contact in HubSpot (handles phone normalization)
+        # Upsert contact in HubSpot (handles deduplication by phone/email/name)
         try:
             first_name = name.split()[0] if name else "Patient"
             last_name = " ".join(name.split()[1:]) if " " in name else ""
-            contact_id, contact_props = upsert_contact_by_phone(phone, first_name, last_name)
+            contact_id, contact_props = upsert_contact_by_phone(phone, first_name, last_name, email)
         except Exception as exc:
             errors.append({"patient": name, "error": f"Failed to upsert contact: {exc}"})
             continue
         
         latest_created_at = latest.get("created_at")
         
-        # Build payload with all data
-        payload = {
-            "properties": {
-                "firstname": first_name,
-                "lastname": last_name,
-                "phone": phone,
-                "trial_1": str(trial1),
-                "trial_2": str(trial2),
-                "trial_3": str(trial3),
-                "average_trial": str(average),
-                "average_kg": str(average),
-                "trial_source": "supabase_patient_reading",
-                "trial_payload_json": json.dumps({
-                    "patient_name": name,
-                    "trial_readings": {
-                        "trial_1": trial1,
-                        "trial_2": trial2,
-                        "trial_3": trial3
-                    },
-                    "average_trial": average,
-                    "average_kg": average,
-                    "hand": latest.get("hand"),
-                    "posture": latest.get("posture"),
-                    "assessment_type": latest.get("assessment_type"),
-                    "created_at": latest_created_at,
-                }),
-                "last_synced_reading_at": latest_created_at,
-            }
+        # Build payload with hand-specific trial fields
+        properties = {
+            "firstname": first_name,
+            "lastname": last_name,
+            # Device ID
+            "device_id": patient.get("host_user_id"),
+            # Posture
+            "posture": latest.get("posture"),
+            # Metadata
+            "trial_source": "supabase_patient_reading",
+            "trial_payload_json": json.dumps({
+                "patient_name": name,
+                "patient_code": patient.get("patient_code"),
+                "age": patient.get("age"),
+                "gender": patient.get("gender"),
+                "dominant_hand": patient.get("dominant_hand"),
+                "device_id": patient.get("host_user_id"),
+                "trial_readings": {
+                    "left_trials": f"{left_readings[0].get('trial1', '')}/{left_readings[0].get('trial2', '')}/{left_readings[0].get('trial3', '')}" if left_readings else "N/A",
+                    "right_trials": f"{right_readings[0].get('trial1', '')}/{right_readings[0].get('trial2', '')}/{right_readings[0].get('trial3', '')}" if right_readings else "N/A"
+                },
+                "left_avg": left_avg,
+                "right_avg": right_avg,
+                "hand": latest.get("hand"),
+                "posture": latest.get("posture"),
+                "assessment_type": latest.get("assessment_type"),
+                "created_at": latest_created_at,
+            }),
+            "last_synced_reading_at": latest_created_at,
         }
+        
+        # Add hand-specific trial fields (left_* and right_* - LOWERCASE for HubSpot)
+        # Left hand trials
+        if left_readings:
+            properties["left_trial_1"] = str(left_readings[0].get("trial1", ""))
+            properties["left_trial_2"] = str(left_readings[0].get("trial2", ""))
+            properties["left_trial_3"] = str(left_readings[0].get("trial3", ""))
+            if left_avg:
+                properties["left_avg"] = str(left_avg)
+        else:
+            # Leave empty if no left hand readings
+            properties["left_trial_1"] = ""
+            properties["left_trial_2"] = ""
+            properties["left_trial_3"] = ""
+            properties["left_avg"] = ""
+        
+        # Right hand trials
+        if right_readings:
+            properties["right_trial_1"] = str(right_readings[0].get("trial1", ""))
+            properties["right_trial_2"] = str(right_readings[0].get("trial2", ""))
+            properties["right_trial_3"] = str(right_readings[0].get("trial3", ""))
+            if right_avg:
+                properties["right_avg"] = str(right_avg)
+        else:
+            # Leave empty if no right hand readings
+            properties["right_trial_1"] = ""
+            properties["right_trial_2"] = ""
+            properties["right_trial_3"] = ""
+            properties["right_avg"] = ""
+        
+        # Add phone if available
+        if phone:
+            properties["phone"] = phone
+        
+        # Add email if available
+        if email:
+            properties["email"] = email
+        
+        # Add optional fields only if they have values
+        if patient.get("age"):
+            properties["age"] = str(patient.get("age"))
+        if patient.get("gender"):
+            properties["gender"] = patient.get("gender")
+        if patient.get("patient_code"):
+            properties["patient_code"] = patient.get("patient_code")
+        if patient.get("dominant_hand"):
+            properties["dominant_hand"] = patient.get("dominant_hand")
+        if condition:
+            properties["condition"] = condition
+        if patient.get("dob"):
+            properties["test_date"] = patient.get("dob")
+        if patient.get("created_at"):
+            properties["created_at"] = patient.get("created_at")
+        
+        payload = {"properties": properties}
         
         # Update contact in HubSpot
         try:
             res = hubspot_request(f"/crm/v3/objects/contacts/{contact_id}", method="PATCH", payload=payload)
+            
+            # Send webhook notification
+            webhook_data = {
+                "patient_name": name,
+                "hubspot_contact_id": contact_id,
+                "phone": phone,
+                "email": email,
+                "left_avg": left_avg,
+                "right_avg": right_avg,
+                "sync_status": "success"
+            }
+            send_webhook_notification(webhook_data)
+            
             synced.append({
                 "patient": name,
                 "phone": phone,
+                "email": email,
                 "hubspot_id": contact_id,
-                "avg": average,
-                "trials": f"{trial1}/{trial2}/{trial3}"
+                "left_avg": left_avg,
+                "right_avg": right_avg,
+                "left_trials": f"{left_readings[0].get('trial1', '')}/{left_readings[0].get('trial2', '')}/{left_readings[0].get('trial3', '')}" if left_readings else "N/A",
+                "right_trials": f"{right_readings[0].get('trial1', '')}/{right_readings[0].get('trial2', '')}/{right_readings[0].get('trial3', '')}" if right_readings else "N/A",
+                "age": patient.get("age"),
+                "gender": patient.get("gender"),
+                "device_id": patient.get("host_user_id")
             })
-            print(f"  [{idx}/{len(patients)}] ✓ Synced: {name} (Avg: {average})")
+            print(f"  [{idx}/{len(patients)}] ✓ Synced: {name} (L:{left_avg or 'N/A'} R:{right_avg or 'N/A'})")
         except Exception as exc:
             errors.append({"patient": name, "error": f"Failed to update HubSpot: {exc}"})
             print(f"  [{idx}/{len(patients)}] ✗ Error: {name} - {exc}")
@@ -206,7 +299,7 @@ def sync_all_patients():
     if synced:
         print("\nSynced patients:")
         for s in synced:
-            print(f"  - {s['patient']}: Avg {s['avg']} ({s['trials']})")
+            print(f"  - {s['patient']}: L:{s.get('left_avg', 'N/A')} R:{s.get('right_avg', 'N/A')}, Age: {s.get('age')}, Device: {s.get('device_id')}")
     
     if errors:
         print("\nErrors:")
@@ -227,16 +320,6 @@ def sync_all_patients():
 
 
 if __name__ == "__main__":
-    if not HUBSPOT_PAT:
-        print("ERROR: HUBSPOT_PAT not found in environment variables.")
-        print("Please create a .env file with your HubSpot PAT.")
-        sys.exit(1)
-    
-    if not SUPABASE_ANON_KEY:
-        print("ERROR: SUPABASE_ANON_KEY not found in environment variables.")
-        print("Please create a .env file with your Supabase anon key.")
-        sys.exit(1)
-    
     result = sync_all_patients()
     
     # Save detailed log

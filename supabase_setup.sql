@@ -57,6 +57,7 @@ CREATE INDEX idx_patient_readings_host_user_id ON patient_readings (host_user_id
 -- remain in the database and the model imputes missing measurements.
 ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS dob DATE;
 ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS dominant_hand TEXT;
+ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS condition TEXT DEFAULT '';
 ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS height NUMERIC;
 ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS weight NUMERIC;
 ALTER TABLE research_patients ADD COLUMN IF NOT EXISTS palm_length NUMERIC;

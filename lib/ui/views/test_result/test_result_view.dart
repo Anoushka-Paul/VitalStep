@@ -93,15 +93,43 @@ class TestResultView extends StackedView<TestResultViewModel> {
                 children: [
                   _buildPremiumHeader(viewModel, test),
                   verticalSpaceMedium,
-                  _buildMetricSection(
-                      "AI Performance Insight", _buildAiInsightCard(viewModel)),
+                  FutureBuilder(
+                    future: viewModel.getAiInsight(),
+                    builder: (context, insightSnapshot) {
+                      if (insightSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: CircularProgressIndicator(color: kcPrimaryColor),
+                          ),
+                        );
+                      }
+                      return _buildMetricSection(
+                        "AI Performance Insight",
+                        _buildAiInsightCard(insightSnapshot.data ?? "Loading...")
+                      );
+                    },
+                  ),
                   verticalSpaceMedium,
                   _buildMetricSection(
                       "Detailed Analysis", _buildRadarChartCard(viewModel)),
                   verticalSpaceMedium,
                   _buildMetricSection("Trial Details", _buildTrialsCard(test)),
                   verticalSpaceMedium,
-                  _buildRecoverySection(viewModel.getRecoveryTips()),
+                  FutureBuilder(
+                    future: viewModel.getRecoveryTips(),
+                    builder: (context, tipsSnapshot) {
+                      if (tipsSnapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(20),
+                            child: CircularProgressIndicator(color: kcPrimaryColor),
+                          ),
+                        );
+                      }
+                      return _buildRecoverySection(tipsSnapshot.data ?? []);
+                    },
+                  ),
                   verticalSpaceLarge,
                   _buildActionButtons(viewModel),
                   verticalSpaceLarge,
@@ -181,7 +209,7 @@ class TestResultView extends StackedView<TestResultViewModel> {
     );
   }
 
-  Widget _buildAiInsightCard(TestResultViewModel vm) {
+  Widget _buildAiInsightCard(String insight) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: premiumCardDecoration.copyWith(
@@ -194,7 +222,7 @@ class TestResultView extends StackedView<TestResultViewModel> {
           horizontalSpaceSmall,
           Expanded(
             child: Text(
-              vm.getAiInsight(),
+              insight,
               style: const TextStyle(
                   fontSize: 15,
                   color: kcDarkGreyColor,

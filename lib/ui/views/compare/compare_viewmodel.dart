@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:stacked/stacked.dart';
 import 'package:vital_step/Model/test.dart';
+import 'package:vital_step/Model/profile.dart';
 import 'package:vital_step/app/app.locator.dart';
 import 'package:vital_step/services/accounts_service.dart';
 import 'package:vital_step/services/analysis_service.dart';
@@ -42,7 +43,7 @@ class CompareViewModel extends BaseViewModel {
         final profile = await _accountsService.getAccountDetails();
         dominantHand = profile.dominantHand ?? 'Right';
       }
-      _compute();
+      await _compute();
     } catch (_) {}
     setBusy(false);
   }
@@ -54,7 +55,7 @@ class CompareViewModel extends BaseViewModel {
     return vals.reduce((a, b) => a > b ? a : b);
   }
 
-  void _compute() {
+  Future<void> _compute() async {
     final leftTests = _allTests.where((t) => t.hand == 'Left').toList();
     final rightTests = _allTests.where((t) => t.hand == 'Right').toList();
 
@@ -72,8 +73,27 @@ class CompareViewModel extends BaseViewModel {
       rightPeak = rightTests.map(_testPeak).reduce((a, b) => a > b ? a : b);
     }
 
+    // Try to get profile for new recommendation system
+    Profile? profile;
+    try {
+      final accountProfile = await _accountsService.getAccountDetails();
+      profile = Profile(
+        name: accountProfile.name,
+        phone: accountProfile.phone,
+        countryCode: '',
+        weight: accountProfile.weight ?? 70,
+        height: accountProfile.height ?? 170,
+        dominantHand: accountProfile.dominantHand,
+        gender: accountProfile.gender,
+        dob: accountProfile.dob,
+      );
+    } catch (e) {
+      // Continue without profile
+    }
+
     compareResult = _analysisService.compareHandsStructured(
-        leftAvg, rightAvg, dominantHand);
+        leftAvg, rightAvg, dominantHand,
+        profile: profile);
   }
 
   List<FlSpot> trendData(String hand) {
