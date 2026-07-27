@@ -45,9 +45,10 @@ app.*.map.json
 
 # VitalStep Temporary Files
 analysis_output.txt
-*.txt
 *.pdf
 *.png
+# Keep requirements.txt for deployment
+!requirements.txt
 # Local ML training data and generated model artifacts.
 # Keep clinical/reference datasets and fitted models out of source control.
 /data/*.csv
