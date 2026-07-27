@@ -30,7 +30,8 @@ class DatabaseManager:
             # Primary database
             self._primary_client = create_client(
                 settings.SUPABASE_URL,
-                settings.SUPABASE_ANON_KEY
+                settings.SUPABASE_ANON_KEY,
+                options={"proxy": None}  # Disable proxy to fix compatibility issue
             )
             logger.info("Primary Supabase database connected")
             
@@ -38,7 +39,8 @@ class DatabaseManager:
             if settings.SUPABASE_URL_2 and settings.SUPABASE_ANON_KEY_2:
                 self._secondary_client = create_client(
                     settings.SUPABASE_URL_2,
-                    settings.SUPABASE_ANON_KEY_2
+                    settings.SUPABASE_ANON_KEY_2,
+                    options={"proxy": None}  # Disable proxy to fix compatibility issue
                 )
                 logger.info("Secondary Supabase database connected")
             
