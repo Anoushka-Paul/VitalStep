@@ -249,7 +249,7 @@ async def legacy_sync_supabase(background_tasks, limit: int = 20):
 @app.post("/sync/app-contact")
 async def legacy_sync_app_contact(payload: dict):
     """Legacy endpoint - redirects to new API"""
-    from app.hubspot_utils import sync_app_contact_to_hubspot
+    from hubspot_utils import sync_app_contact_to_hubspot
     return sync_app_contact_to_hubspot(payload)
 
 
