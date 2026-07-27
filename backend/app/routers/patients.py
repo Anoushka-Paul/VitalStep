@@ -5,8 +5,11 @@ Handles patient CRUD operations and trial readings
 import os
 import sys
 import time
+import logging
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status, Query
+
+logger = logging.getLogger(__name__)
 
 from app.schemas import (
     PatientCreate,
@@ -59,7 +62,7 @@ async def get_patients(
         
         return patients
     except Exception as e:
-        log_error(e, router.logger, {"endpoint": "get_patients"})
+        log_error(e, logger, {"endpoint": "get_patients"})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch patients"
@@ -88,7 +91,7 @@ async def get_patient(patient_id: int, database: str = "primary"):
     except HTTPException:
         raise
     except Exception as e:
-        log_error(e, router.logger, {"patient_id": patient_id})
+        log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch patient"
@@ -104,7 +107,7 @@ async def create_patient(patient: PatientCreate, database: str = "primary"):
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
-        log_request(patient.dict(), router.logger)
+        log_request(patient.dict(), logger)
         
         repo = PatientRepository(database=database)
         
@@ -120,7 +123,7 @@ async def create_patient(patient: PatientCreate, database: str = "primary"):
         patient_data = patient.dict()
         created_patient = repo.create(patient_data)
         
-        log_response(created_patient, router.logger)
+        log_response(created_patient, logger)
         
         # Auto-sync to HubSpot (non-blocking)
         try:
@@ -183,13 +186,13 @@ async def create_patient(patient: PatientCreate, database: str = "primary"):
                         requests.patch(url, headers=headers, json=update_payload, timeout=10)
         except Exception as exc:
             # Log but don't fail patient creation if HubSpot sync fails
-            log_error(exc, router.logger, {"patient_id": created_patient.get("id"), "hubspot_sync": True})
+            log_error(exc, logger, {"patient_id": created_patient.get("id"), "hubspot_sync": True})
         
         return created_patient
     except HTTPException:
         raise
     except Exception as e:
-        log_error(e, router.logger, {"patient": patient.dict()})
+        log_error(e, logger, {"patient": patient.dict()})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create patient"
@@ -206,7 +209,7 @@ async def update_patient(patient_id: int, patient: PatientCreate, database: str 
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
-        log_request({"patient_id": patient_id, "data": patient.dict()}, router.logger)
+        log_request({"patient_id": patient_id, "data": patient.dict()}, logger)
         
         repo = PatientRepository(database=database)
         
@@ -221,13 +224,13 @@ async def update_patient(patient_id: int, patient: PatientCreate, database: str 
         # Update patient
         updated_patient = repo.update(patient_id, patient.dict())
         
-        log_response(updated_patient, router.logger)
+        log_response(updated_patient, logger)
         
         return updated_patient
     except HTTPException:
         raise
     except Exception as e:
-        log_error(e, router.logger, {"patient_id": patient_id})
+        log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update patient"
@@ -260,7 +263,7 @@ async def delete_patient(patient_id: int, database: str = "primary"):
     except HTTPException:
         raise
     except Exception as e:
-        log_error(e, router.logger, {"patient_id": patient_id})
+        log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete patient"
@@ -289,7 +292,7 @@ async def get_patient_readings(
         readings = repo.get_by_patient(patient_id, limit=limit)
         return readings
     except Exception as e:
-        log_error(e, router.logger, {"patient_id": patient_id})
+        log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch readings"
@@ -326,7 +329,7 @@ async def get_latest_reading(patient_id: int, database: str = "primary"):
     except HTTPException:
         raise
     except Exception as e:
-        log_error(e, router.logger, {"patient_id": patient_id})
+        log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch latest reading"
@@ -343,7 +346,7 @@ async def create_trial_reading(patient_id: int, reading: TrialReadingCreate, dat
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
-        log_request({"patient_id": patient_id, "reading": reading.dict()}, router.logger)
+        log_request({"patient_id": patient_id, "reading": reading.dict()}, logger)
         
         # Verify patient exists
         patient_repo = PatientRepository(database=database)
@@ -366,13 +369,13 @@ async def create_trial_reading(patient_id: int, reading: TrialReadingCreate, dat
         repo = TrialReadingRepository(database=database)
         created_reading = repo.create(reading_data)
         
-        log_response(created_reading, router.logger)
+        log_response(created_reading, logger)
         
         return created_reading
     except HTTPException:
         raise
     except Exception as e:
-        log_error(e, router.logger, {"patient_id": patient_id})
+        log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create reading"

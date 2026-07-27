@@ -1,14 +1,11 @@
-"""
-HubSpot Integration Router
-Handles contact syncing with duplicate prevention
-"""
 import time
 import json
+import logging
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, status, BackgroundTasks
 
 from app.schemas import HubSpotContactSync, HubSpotSyncResponse
-from app.hubspot_utils import (
+from hubspot_utils import (
     normalize_phone,
     upsert_contact_by_phone,
     merge_contact_data,
@@ -16,6 +13,7 @@ from app.hubspot_utils import (
 )
 from app.logging_config import log_request, log_response, log_error
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/hubspot", tags=["HubSpot Integration"])
 
 
@@ -54,7 +52,7 @@ async def sync_contact_to_hubspot(contact_data: HubSpotContactSync):
     start_time = time.time()
     
     try:
-        log_request(contact_data.dict(), router.logger)
+        log_request(contact_data.dict(), logger)
         
         # Normalize phone number
         normalized_phone = normalize_phone(contact_data.phone)
@@ -106,7 +104,7 @@ async def sync_contact_to_hubspot(contact_data: HubSpotContactSync):
         merged_properties = merge_contact_data(contact_props, new_properties)
         
         # Update contact in HubSpot
-        from app.hubspot_utils import hubspot_request
+        from hubspot_utils import hubspot_request
         hubspot_request(
             f"/crm/v3/objects/contacts/{contact_id}",
             method="PATCH",
@@ -125,18 +123,18 @@ async def sync_contact_to_hubspot(contact_data: HubSpotContactSync):
         )
         
         duration = time.time() - start_time
-        log_response(result.dict(), router.logger, duration)
+        log_response(result.dict(), logger, duration)
         
         return result
         
     except ValueError as e:
-        log_error(e, router.logger, {"contact": contact_data.dict()})
+        log_error(e, logger, {"contact": contact_data.dict()})
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e)
         )
     except Exception as e:
-        log_error(e, router.logger, {"contact": contact_data.dict()})
+        log_error(e, logger, {"contact": contact_data.dict()})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"HubSpot sync failed: {str(e)}"
@@ -155,7 +153,7 @@ async def batch_sync_contacts(contacts: list[HubSpotContactSync]):
     start_time = time.time()
     
     try:
-        log_request({"count": len(contacts)}, router.logger)
+        log_request({"count": len(contacts)}, logger)
         
         ensure_contact_properties()
         
@@ -195,7 +193,7 @@ async def batch_sync_contacts(contacts: list[HubSpotContactSync]):
                 # Merge and update
                 merged_properties = merge_contact_data(contact_props, new_properties)
                 
-                from app.hubspot_utils import hubspot_request
+                from hubspot_utils import hubspot_request
                 hubspot_request(
                     f"/crm/v3/objects/contacts/{contact_id}",
                     method="PATCH",
@@ -227,12 +225,12 @@ async def batch_sync_contacts(contacts: list[HubSpotContactSync]):
             "duration_seconds": round(duration, 2)
         }
         
-        log_response(response, router.logger, duration)
+        log_response(response, logger, duration)
         
         return response
         
     except Exception as e:
-        log_error(e, router.logger)
+        log_error(e, logger)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Batch sync failed"
@@ -243,11 +241,11 @@ async def batch_sync_contacts(contacts: list[HubSpotContactSync]):
 async def get_hubspot_properties():
     """Get list of custom HubSpot properties"""
     try:
-        from app.hubspot_utils import hubspot_request
+        from hubspot_utils import hubspot_request
         result = hubspot_request("/crm/v3/properties/contacts")
         return {"properties": result.get("results", [])}
     except Exception as e:
-        log_error(e, router.logger)
+        log_error(e, logger)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch properties"

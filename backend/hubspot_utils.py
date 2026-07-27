@@ -314,6 +314,21 @@ def upsert_contact_by_phone(phone: str, first_name: str, last_name: str = "", em
     return created["id"], created.get("properties", {})
 
 
+def is_email(contact: str) -> bool:
+    """
+    Check if a contact string is an email address.
+    
+    Args:
+        contact: String to check
+        
+    Returns:
+        True if the string contains @ symbol (email format)
+    """
+    if not contact:
+        return False
+    return "@" in contact and "." in contact
+
+
 def merge_contact_data(existing_props: dict, new_data: dict) -> dict:
     """
     Merge new data with existing contact data.

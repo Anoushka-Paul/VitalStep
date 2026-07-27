@@ -3,6 +3,7 @@ ML Prediction Router
 Handles grip strength predictions and batch processing
 """
 import time
+import logging
 from typing import List
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -16,6 +17,7 @@ from app.schemas import (
 from app.ml_service import get_ml_service
 from app.logging_config import log_request, log_response, log_error
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/ml", tags=["Machine Learning"])
 
 
@@ -43,24 +45,24 @@ async def predict_grip_strength(request: MLPredictionRequest):
     start_time = time.time()
     
     try:
-        log_request(request.dict(), router.logger)
+        log_request(request.dict(), logger)
         
         ml_service = get_ml_service()
         result = ml_service.predict(request)
         
         duration = time.time() - start_time
-        log_response(result.dict(), router.logger, duration)
+        log_response(result.dict(), logger, duration)
         
         return result
         
     except ValueError as e:
-        log_error(e, router.logger, {"request": request.dict()})
+        log_error(e, logger, {"request": request.dict()})
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e)
         )
     except Exception as e:
-        log_error(e, router.logger, {"request": request.dict()})
+        log_error(e, logger, {"request": request.dict()})
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Prediction failed"
@@ -79,7 +81,7 @@ async def batch_predict_grip_strength(request: BatchPredictionRequest):
     start_time = time.time()
     
     try:
-        log_request({"count": len(request.readings)}, router.logger)
+        log_request({"count": len(request.readings)}, logger)
         
         ml_service = get_ml_service()
         batch_result = ml_service.batch_predict(request.readings)
@@ -93,12 +95,12 @@ async def batch_predict_grip_strength(request: BatchPredictionRequest):
         )
         
         duration = time.time() - start_time
-        log_response(response.dict(), router.logger, duration)
+        log_response(response.dict(), logger, duration)
         
         return response
         
     except Exception as e:
-        log_error(e, router.logger)
+        log_error(e, logger)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Batch prediction failed"
@@ -112,7 +114,7 @@ async def get_model_info():
         ml_service = get_ml_service()
         return ml_service.get_model_info()
     except Exception as e:
-        log_error(e, router.logger)
+        log_error(e, logger)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get model info"
@@ -131,7 +133,7 @@ async def reload_model():
         else:
             return {"status": "warning", "message": "Model reload failed, using fallback"}
     except Exception as e:
-        log_error(e, router.logger)
+        log_error(e, logger)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to reload model"

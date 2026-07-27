@@ -127,6 +127,9 @@ def analyze_feature_importance(artifact: dict, frame: pd.DataFrame,
     
     if hasattr(median_model.named_steps["regressor"], "feature_importances_"):
         importances = median_model.named_steps["regressor"].feature_importances_
+    orig_importance_df = pd.DataFrame({"feature": features, "importance": 0.0})
+    if hasattr(median_model.named_steps["regressor"], "feature_importances_"):
+        importances = median_model.named_steps["regressor"].feature_importances_
         
         # Get feature names after preprocessing
         preprocessor = median_model.named_steps["features"]
@@ -142,6 +145,16 @@ def analyze_feature_importance(artifact: dict, frame: pd.DataFrame,
             print(f"    {row['feature']}: {row['importance']:.4f}")
         
         importance_results["built_in"] = importance_df
+        
+        # Map back to original features for consensus ranking
+        orig_importances = {}
+        for feature in features:
+            mask = importance_df["feature"].str.contains(feature, regex=False)
+            orig_importances[feature] = importance_df[mask]["importance"].sum()
+        orig_importance_df = pd.DataFrame({
+            "feature": list(orig_importances.keys()),
+            "importance": list(orig_importances.values())
+        })
     
     # Method 2: Permutation importance
     print("\n  Computing permutation importance...")
@@ -177,11 +190,13 @@ def analyze_feature_importance(artifact: dict, frame: pd.DataFrame,
     importance_results["permutation"] = perm_df
     
     # Method 3: Feature correlation with target
-    correlations = frame[features + [TARGET]].corr()[TARGET].drop(TARGET).abs().sort_values(ascending=False)
+    numeric_features = [col for col in features if pd.api.types.is_numeric_dtype(frame[col])]
+    correlations = frame[numeric_features + [TARGET]].corr()[TARGET].drop(TARGET).abs().fillna(0)
+    correlations = correlations.reindex(features, fill_value=0)
     corr_df = pd.DataFrame({
         "feature": correlations.index,
         "correlation": correlations.values
-    })
+    }).sort_values("correlation", ascending=False)
     
     print("\n  Top 10 Features (Correlation with Target):")
     for i, row in corr_df.head(top_k).iterrows():
@@ -191,10 +206,10 @@ def analyze_feature_importance(artifact: dict, frame: pd.DataFrame,
     
     # Consensus ranking
     importance_results["consensus"] = (
-        importance_df.set_index("feature")["importance"].rank() +
+        orig_importance_df.set_index("feature")["importance"].rank() +
         perm_df.set_index("feature")["importance"].rank() +
         corr_df.set_index("feature")["correlation"].rank()
-    ).sort_values()
+    ).sort_values(ascending=False)
     
     print("\n  Consensus Top 10 Features (averaged across all methods):")
     for feature in importance_results["consensus"].head(top_k).index:

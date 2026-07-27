@@ -3,7 +3,7 @@ Pydantic schemas for request/response validation
 """
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 # ============================================================================
@@ -15,7 +15,7 @@ class PatientBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     contact: str = Field(..., min_length=10, max_length=15)
     age: Optional[int] = Field(None, ge=0, le=150)
-    dominant_hand: Optional[str] = Field(None, regex="^(left|right|ambidextrous)$")
+    dominant_hand: Optional[str] = Field(None, pattern="^(left|right|ambidextrous)$")
     patient_code: Optional[str] = Field(None, max_length=50)
 
 
@@ -43,7 +43,7 @@ class TrialReadingBase(BaseModel):
     trial1: float = Field(..., ge=0)
     trial2: float = Field(..., ge=0)
     trial3: float = Field(..., ge=0)
-    hand: Optional[str] = Field(None, regex="^(left|right)$")
+    hand: Optional[str] = Field(None, pattern="^(left|right)$")
     posture: Optional[str] = Field(None, max_length=100)
     assessment_type: Optional[str] = Field(None, max_length=100)
 
@@ -78,11 +78,11 @@ class MLPredictionRequest(BaseModel):
     trial1: float = Field(..., ge=0, description="First trial reading in kg")
     trial2: float = Field(..., ge=0, description="Second trial reading in kg")
     trial3: float = Field(..., ge=0, description="Third trial reading in kg")
-    hand: Optional[str] = Field(None, regex="^(left|right)$", description="Dominant hand")
+    hand: Optional[str] = Field(None, pattern="^(left|right)$", description="Dominant hand")
     posture: Optional[str] = Field(None, description="Posture during test")
     age: Optional[int] = Field(None, ge=0, le=150, description="Patient age")
     
-    @validator("trial1", "trial2", "trial3")
+    @field_validator("trial1", "trial2", "trial3")
     def validate_trials(cls, v):
         if v > 200:  # Reasonable max for grip strength
             raise ValueError("Trial value seems too high (max 200kg)")
@@ -132,7 +132,7 @@ class HubSpotContactSync(BaseModel):
     posture: Optional[str] = Field(None, max_length=100)
     test_date: Optional[datetime] = None
     
-    @validator("phone")
+    @field_validator("phone")
     def validate_phone(cls, v):
         # Remove all non-digit characters for validation
         digits = ''.join(filter(str.isdigit, v))
