@@ -26,7 +26,7 @@ class PatientCreate(PatientBase):
 
 class PatientResponse(PatientBase):
     """Schema for patient response"""
-    id: int
+    id: str
     created_at: Optional[datetime] = None
     
     class Config:
@@ -39,7 +39,7 @@ class PatientResponse(PatientBase):
 
 class TrialReadingBase(BaseModel):
     """Base trial reading schema"""
-    patient_id: int
+    patient_id: str
     trial1: float = Field(..., ge=0)
     trial2: float = Field(..., ge=0)
     trial3: float = Field(..., ge=0)
@@ -55,7 +55,7 @@ class TrialReadingCreate(TrialReadingBase):
 
 class TrialReadingResponse(TrialReadingBase):
     """Schema for trial reading response"""
-    id: int
+    id: str
     average: Optional[float] = None
     created_at: Optional[datetime] = None
     
