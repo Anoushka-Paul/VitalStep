@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 class PatientBase(BaseModel):
     """Base patient schema"""
     name: str = Field(..., min_length=1, max_length=200)
-    contact: str = Field(..., min_length=10, max_length=15)
+    contact: str = Field(..., min_length=10, max_length=254)
     age: Optional[int] = Field(None, ge=0, le=150)
     dominant_hand: Optional[str] = Field(None, pattern="^(left|right|ambidextrous)$")
     patient_code: Optional[str] = Field(None, max_length=50)
