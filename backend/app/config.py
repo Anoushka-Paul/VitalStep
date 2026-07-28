@@ -22,14 +22,14 @@ class Settings(BaseSettings):
     
     # Primary Supabase Database
     SUPABASE_URL: str = Field(default="https://cbebmpgsbxqdzpfgqulj.supabase.co")
-    SUPABASE_ANON_KEY: str
+    SUPABASE_ANON_KEY: Optional[str] = None
     
     # Secondary Supabase Database (for multi-database support)
     SUPABASE_URL_2: Optional[str] = None
     SUPABASE_ANON_KEY_2: Optional[str] = None
     
     # HubSpot Integration
-    HUBSPOT_PAT: str
+    HUBSPOT_PAT: Optional[str] = None
     
     # ML Model Configuration
     MODEL_PATH: str = Field(default="../ml/artifacts")
@@ -54,7 +54,8 @@ class Settings(BaseSettings):
         if isinstance(values, dict):
             cors = values.get("CORS_ORIGINS")
             if isinstance(cors, str):
-                if cors.strip() == "*":
+                cors = cors.strip()
+                if cors == "*":
                     values["CORS_ORIGINS"] = ["*"]
                 else:
                     values["CORS_ORIGINS"] = [origin.strip() for origin in cors.split(",") if origin.strip()]
