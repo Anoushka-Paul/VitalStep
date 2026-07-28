@@ -4,15 +4,15 @@ Handles grip strength predictions and batch processing
 """
 import time
 import logging
-from typing import List
-from fastapi import APIRouter, HTTPException, status
-from fastapi.responses import JSONResponse
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, status, Query
 
 from app.schemas import (
     MLPredictionRequest,
     MLPredictionResponse,
     BatchPredictionRequest,
     BatchPredictionResponse,
+    PredictionRecord,
 )
 from app.ml_service import get_ml_service
 from app.logging_config import log_request, log_response, log_error
@@ -26,6 +26,13 @@ async def ml_health():
     """Check ML service health"""
     ml_service = get_ml_service()
     return ml_service.get_model_info()
+
+
+@router.get("/categories", response_model=List[str])
+async def get_categories():
+    """Get available strength categories"""
+    ml_service = get_ml_service()
+    return ml_service.categories
 
 
 @router.post("/predict", response_model=MLPredictionResponse, status_code=status.HTTP_200_OK)
@@ -48,7 +55,7 @@ async def predict_grip_strength(request: MLPredictionRequest):
         log_request(request.dict(), logger)
         
         ml_service = get_ml_service()
-        result = ml_service.predict(request)
+        result = ml_service.predict(request, save=True)
         
         duration = time.time() - start_time
         log_response(result.dict(), logger, duration)
@@ -66,6 +73,85 @@ async def predict_grip_strength(request: MLPredictionRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Prediction failed"
+        )
+
+
+@router.get("/predictions", response_model=List[PredictionRecord])
+async def get_predictions(
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+):
+    """
+    Get all predictions with pagination
+    
+    - **limit**: Number of predictions to return (1-100)
+    - **offset**: Number of predictions to skip
+    """
+    try:
+        ml_service = get_ml_service()
+        predictions = ml_service.get_predictions(limit=limit, offset=offset)
+        return predictions
+    except Exception as e:
+        log_error(e, logger, {"endpoint": "get_predictions"})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch predictions"
+        )
+
+
+@router.get("/predictions/{prediction_id}", response_model=PredictionRecord)
+async def get_prediction(prediction_id: str):
+    """
+    Get prediction by ID
+    
+    - **prediction_id**: Prediction ID
+    """
+    try:
+        ml_service = get_ml_service()
+        prediction = ml_service.get_prediction(prediction_id)
+        
+        if not prediction:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Prediction {prediction_id} not found"
+            )
+        
+        return prediction
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_error(e, logger, {"prediction_id": prediction_id})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch prediction"
+        )
+
+
+@router.delete("/predictions/{prediction_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_prediction(prediction_id: str):
+    """
+    Delete prediction by ID
+    
+    - **prediction_id**: Prediction ID
+    """
+    try:
+        ml_service = get_ml_service()
+        deleted = ml_service.delete_prediction(prediction_id)
+        
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Prediction {prediction_id} not found"
+            )
+        
+        return None
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_error(e, logger, {"prediction_id": prediction_id})
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete prediction"
         )
 
 

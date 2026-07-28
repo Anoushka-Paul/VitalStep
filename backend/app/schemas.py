@@ -134,6 +134,27 @@ class BatchPredictionResponse(BaseModel):
     errors: List[Dict[str, Any]]
 
 
+class PredictionRecord(BaseModel):
+    """Schema for stored prediction record"""
+    id: str
+    trial1: float = Field(..., ge=0)
+    trial2: float = Field(..., ge=0)
+    trial3: float = Field(..., ge=0)
+    average: float
+    hand: Optional[str] = Field(None, pattern="^(left|right)$")
+    posture: Optional[str] = Field(None, max_length=100)
+    age: Optional[int] = Field(None, ge=0, le=150)
+    predicted_category: str
+    confidence: Optional[float] = None
+    percentile: Optional[float] = None
+    recommendations: List[str] = Field(default_factory=list)
+    model_version: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # ============================================================================
 # HubSpot Sync Schemas
 # ============================================================================

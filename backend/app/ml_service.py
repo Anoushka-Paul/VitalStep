@@ -3,6 +3,7 @@ ML Model Service for VitalStep
 Handles model loading, predictions, and batch processing
 """
 import logging
+import uuid
 import joblib
 import numpy as np
 from typing import Optional, List, Dict, Any
@@ -10,7 +11,7 @@ from pathlib import Path
 from datetime import datetime
 
 from app.config import settings
-from app.schemas import MLPredictionRequest, MLPredictionResponse
+from app.schemas import MLPredictionRequest, MLPredictionResponse, PredictionRecord
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ class MLModelService:
         # Model metadata
         self.feature_names = ["trial1", "trial2", "trial3", "hand_encoded", "posture_encoded"]
         self.categories = ["Weak", "Below Average", "Average", "Above Average", "Strong"]
+        
+        # In-memory prediction history
+        self.predictions: Dict[str, PredictionRecord] = {}
     
     def load_model(self) -> bool:
         """
@@ -62,27 +66,45 @@ class MLModelService:
             self.is_loaded = False
             return False
     
-    def predict(self, request: MLPredictionRequest) -> MLPredictionResponse:
+    def predict(self, request: MLPredictionRequest, save: bool = True) -> MLPredictionResponse:
         """
         Make prediction for a single reading
         
         Args:
             request: ML prediction request with trial data
-        
+            save: Whether to save prediction to history
+            
         Returns:
             ML prediction response
         """
         try:
-            # Calculate average
             average = round((request.trial1 + request.trial2 + request.trial3) / 3, 2)
             
-            # If model is loaded, use it for predictions
             if self.is_loaded and self.model:
-                prediction_result = self._model_predict(request)
-                return prediction_result
+                result = self._model_predict(request)
+            else:
+                result = self._fallback_predict(request, average)
             
-            # Fallback to rule-based predictions
-            return self._fallback_predict(request, average)
+            if save:
+                record = PredictionRecord(
+                    id=str(uuid.uuid4()),
+                    trial1=request.trial1,
+                    trial2=request.trial2,
+                    trial3=request.trial3,
+                    average=result.average,
+                    hand=request.hand,
+                    posture=request.posture,
+                    age=request.age,
+                    predicted_category=result.predicted_category,
+                    confidence=result.confidence,
+                    percentile=result.percentile,
+                    recommendations=result.recommendations,
+                    model_version=result.model_version,
+                    created_at=datetime.now()
+                )
+                self.predictions[record.id] = record
+            
+            return result
             
         except Exception as e:
             logger.error(f"Prediction error: {e}")
@@ -266,8 +288,29 @@ class MLModelService:
             "load_timestamp": self.load_timestamp.isoformat() if self.load_timestamp else None,
             "model_path": str(self.model_path),
             "feature_names": self.feature_names,
-            "categories": self.categories
+            "categories": self.categories,
+            "total_predictions": len(self.predictions)
         }
+    
+    def get_prediction(self, prediction_id: str) -> Optional[PredictionRecord]:
+        """Get a specific prediction by ID"""
+        return self.predictions.get(prediction_id)
+    
+    def get_predictions(self, limit: int = 20, offset: int = 0) -> List[PredictionRecord]:
+        """Get all predictions with pagination"""
+        all_predictions = sorted(
+            self.predictions.values(),
+            key=lambda x: x.created_at,
+            reverse=True
+        )
+        return all_predictions[offset:offset + limit]
+    
+    def delete_prediction(self, prediction_id: str) -> bool:
+        """Delete a prediction by ID"""
+        if prediction_id in self.predictions:
+            del self.predictions[prediction_id]
+            return True
+        return False
     
     def reload_model(self) -> bool:
         """Reload model from disk"""
