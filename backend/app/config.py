@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # API Configuration
     API_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: str = "*"  # Will be parsed to list in validator
+    CORS_ORIGINS: list[str] = ["*"]  # Default to allow all origins
     
     # Primary Supabase Database
     SUPABASE_URL: str = Field(default="https://cbebmpgsbxqdzpfgqulj.supabase.co")
@@ -46,17 +46,6 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = Field(default="your-secret-key-change-in-production")
     API_KEY_HEADER: str = "X-API-Key"
-    
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        """Parse CORS_ORIGINS from string to list"""
-        if isinstance(v, str):
-            v = v.strip()
-            if v == "*":
-                return ["*"]
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
     
     @property
     def is_production(self) -> bool:

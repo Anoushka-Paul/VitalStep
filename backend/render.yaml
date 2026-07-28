@@ -32,8 +32,6 @@ services:
         sync: false  # Set manually in dashboard
       - key: SECRET_KEY
         generateValue: true
-      - key: CORS_ORIGINS
-        value: https://your-app-domain.com,https://www.your-app-domain.com
     
     # Health check
     healthCheckPath: /health/ready
