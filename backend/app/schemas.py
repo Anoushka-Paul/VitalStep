@@ -171,6 +171,14 @@ class HubSpotContactSync(BaseModel):
     trial2: Optional[float] = Field(None, ge=0)
     trial3: Optional[float] = Field(None, ge=0)
     average_trial: Optional[float] = Field(None, ge=0)
+    left_trial_1: Optional[float] = Field(None, ge=0)
+    left_trial_2: Optional[float] = Field(None, ge=0)
+    left_trial_3: Optional[float] = Field(None, ge=0)
+    left_avg: Optional[float] = Field(None, ge=0)
+    right_trial_1: Optional[float] = Field(None, ge=0)
+    right_trial_2: Optional[float] = Field(None, ge=0)
+    right_trial_3: Optional[float] = Field(None, ge=0)
+    right_avg: Optional[float] = Field(None, ge=0)
     posture: Optional[str] = Field(None, max_length=100)
     test_date: Optional[datetime] = None
     
@@ -211,6 +219,14 @@ class HubSpotContactBase(BaseModel):
     trial_2: Optional[float] = Field(None, ge=0)
     trial_3: Optional[float] = Field(None, ge=0)
     average_trial: Optional[float] = Field(None, ge=0)
+    left_trial_1: Optional[float] = Field(None, ge=0)
+    left_trial_2: Optional[float] = Field(None, ge=0)
+    left_trial_3: Optional[float] = Field(None, ge=0)
+    left_avg: Optional[float] = Field(None, ge=0)
+    right_trial_1: Optional[float] = Field(None, ge=0)
+    right_trial_2: Optional[float] = Field(None, ge=0)
+    right_trial_3: Optional[float] = Field(None, ge=0)
+    right_avg: Optional[float] = Field(None, ge=0)
     posture: Optional[str] = Field(None, max_length=100)
     test_date: Optional[datetime] = None
 

@@ -103,6 +103,22 @@ async def sync_contact_to_hubspot(contact_data: HubSpotContactSync):
             new_properties["trial_3"] = str(contact_data.trial3)
         if contact_data.average_trial is not None:
             new_properties["average_trial"] = str(contact_data.average_trial)
+        if contact_data.left_trial_1 is not None:
+            new_properties["left_trial_1"] = str(contact_data.left_trial_1)
+        if contact_data.left_trial_2 is not None:
+            new_properties["left_trial_2"] = str(contact_data.left_trial_2)
+        if contact_data.left_trial_3 is not None:
+            new_properties["left_trial_3"] = str(contact_data.left_trial_3)
+        if contact_data.left_avg is not None:
+            new_properties["left_avg"] = str(contact_data.left_avg)
+        if contact_data.right_trial_1 is not None:
+            new_properties["right_trial_1"] = str(contact_data.right_trial_1)
+        if contact_data.right_trial_2 is not None:
+            new_properties["right_trial_2"] = str(contact_data.right_trial_2)
+        if contact_data.right_trial_3 is not None:
+            new_properties["right_trial_3"] = str(contact_data.right_trial_3)
+        if contact_data.right_avg is not None:
+            new_properties["right_avg"] = str(contact_data.right_avg)
         if contact_data.posture:
             new_properties["posture"] = contact_data.posture
         if contact_data.test_date:
@@ -185,6 +201,22 @@ async def batch_sync_contacts(contacts: list[HubSpotContactSync]):
                     new_properties["age"] = str(contact_data.age)
                 if contact_data.average_trial is not None:
                     new_properties["average_trial"] = str(contact_data.average_trial)
+                if contact_data.left_trial_1 is not None:
+                    new_properties["left_trial_1"] = str(contact_data.left_trial_1)
+                if contact_data.left_trial_2 is not None:
+                    new_properties["left_trial_2"] = str(contact_data.left_trial_2)
+                if contact_data.left_trial_3 is not None:
+                    new_properties["left_trial_3"] = str(contact_data.left_trial_3)
+                if contact_data.left_avg is not None:
+                    new_properties["left_avg"] = str(contact_data.left_avg)
+                if contact_data.right_trial_1 is not None:
+                    new_properties["right_trial_1"] = str(contact_data.right_trial_1)
+                if contact_data.right_trial_2 is not None:
+                    new_properties["right_trial_2"] = str(contact_data.right_trial_2)
+                if contact_data.right_trial_3 is not None:
+                    new_properties["right_trial_3"] = str(contact_data.right_trial_3)
+                if contact_data.right_avg is not None:
+                    new_properties["right_avg"] = str(contact_data.right_avg)
                 
                 merged_properties = merge_contact_data(contact_props, new_properties)
                 
@@ -253,6 +285,8 @@ async def get_hubspot_contacts(
             "firstname", "lastname", "phone", "email", "age", "gender",
             "condition", "dominant_hand", "patient_code", "device_id",
             "trial_1", "trial_2", "trial_3", "average_trial",
+            "left_trial_1", "left_trial_2", "left_trial_3", "left_avg",
+            "right_trial_1", "right_trial_2", "right_trial_3", "right_avg",
             "posture", "test_date", "created_at", "last_synced_reading_at"
         ]
         
@@ -324,6 +358,14 @@ async def get_hubspot_contacts(
                 trial_2=float(props["trial_2"]) if props.get("trial_2") else None,
                 trial_3=float(props["trial_3"]) if props.get("trial_3") else None,
                 average_trial=float(props["average_trial"]) if props.get("average_trial") else None,
+                left_trial_1=float(props["left_trial_1"]) if props.get("left_trial_1") else None,
+                left_trial_2=float(props["left_trial_2"]) if props.get("left_trial_2") else None,
+                left_trial_3=float(props["left_trial_3"]) if props.get("left_trial_3") else None,
+                left_avg=float(props["left_avg"]) if props.get("left_avg") else None,
+                right_trial_1=float(props["right_trial_1"]) if props.get("right_trial_1") else None,
+                right_trial_2=float(props["right_trial_2"]) if props.get("right_trial_2") else None,
+                right_trial_3=float(props["right_trial_3"]) if props.get("right_trial_3") else None,
+                right_avg=float(props["right_avg"]) if props.get("right_avg") else None,
                 posture=props.get("posture"),
                 test_date=props.get("test_date"),
                 last_synced_reading_at=props.get("last_synced_reading_at"),
@@ -350,6 +392,8 @@ async def get_hubspot_contact(contact_id: str):
             "firstname", "lastname", "phone", "email", "age", "gender",
             "condition", "dominant_hand", "patient_code", "device_id",
             "trial_1", "trial_2", "trial_3", "average_trial",
+            "left_trial_1", "left_trial_2", "left_trial_3", "left_avg",
+            "right_trial_1", "right_trial_2", "right_trial_3", "right_avg",
             "posture", "test_date", "created_at", "last_synced_reading_at"
         ]
         
@@ -451,6 +495,22 @@ async def create_hubspot_contact(contact: HubSpotContactCreate):
             create_payload["properties"]["trial_3"] = str(contact.trial_3)
         if contact.average_trial is not None:
             create_payload["properties"]["average_trial"] = str(contact.average_trial)
+        if contact.left_trial_1 is not None:
+            create_payload["properties"]["left_trial_1"] = str(contact.left_trial_1)
+        if contact.left_trial_2 is not None:
+            create_payload["properties"]["left_trial_2"] = str(contact.left_trial_2)
+        if contact.left_trial_3 is not None:
+            create_payload["properties"]["left_trial_3"] = str(contact.left_trial_3)
+        if contact.left_avg is not None:
+            create_payload["properties"]["left_avg"] = str(contact.left_avg)
+        if contact.right_trial_1 is not None:
+            create_payload["properties"]["right_trial_1"] = str(contact.right_trial_1)
+        if contact.right_trial_2 is not None:
+            create_payload["properties"]["right_trial_2"] = str(contact.right_trial_2)
+        if contact.right_trial_3 is not None:
+            create_payload["properties"]["right_trial_3"] = str(contact.right_trial_3)
+        if contact.right_avg is not None:
+            create_payload["properties"]["right_avg"] = str(contact.right_avg)
         if contact.posture:
             create_payload["properties"]["posture"] = contact.posture
         if contact.test_date:
@@ -476,6 +536,14 @@ async def create_hubspot_contact(contact: HubSpotContactCreate):
             trial_2=float(props["trial_2"]) if props.get("trial_2") else None,
             trial_3=float(props["trial_3"]) if props.get("trial_3") else None,
             average_trial=float(props["average_trial"]) if props.get("average_trial") else None,
+            left_trial_1=float(props["left_trial_1"]) if props.get("left_trial_1") else None,
+            left_trial_2=float(props["left_trial_2"]) if props.get("left_trial_2") else None,
+            left_trial_3=float(props["left_trial_3"]) if props.get("left_trial_3") else None,
+            left_avg=float(props["left_avg"]) if props.get("left_avg") else None,
+            right_trial_1=float(props["right_trial_1"]) if props.get("right_trial_1") else None,
+            right_trial_2=float(props["right_trial_2"]) if props.get("right_trial_2") else None,
+            right_trial_3=float(props["right_trial_3"]) if props.get("right_trial_3") else None,
+            right_avg=float(props["right_avg"]) if props.get("right_avg") else None,
             posture=props.get("posture"),
             test_date=props.get("test_date"),
             last_synced_reading_at=props.get("last_synced_reading_at"),
@@ -589,6 +657,46 @@ async def update_hubspot_contact(contact_id: str, contact: HubSpotContactUpdate)
             new_properties["average_trial"] = str(contact.average_trial)
         elif existing_props.get("average_trial"):
             new_properties["average_trial"] = existing_props["average_trial"]
+        
+        if contact.left_trial_1 is not None:
+            new_properties["left_trial_1"] = str(contact.left_trial_1)
+        elif existing_props.get("left_trial_1"):
+            new_properties["left_trial_1"] = existing_props["left_trial_1"]
+            
+        if contact.left_trial_2 is not None:
+            new_properties["left_trial_2"] = str(contact.left_trial_2)
+        elif existing_props.get("left_trial_2"):
+            new_properties["left_trial_2"] = existing_props["left_trial_2"]
+            
+        if contact.left_trial_3 is not None:
+            new_properties["left_trial_3"] = str(contact.left_trial_3)
+        elif existing_props.get("left_trial_3"):
+            new_properties["left_trial_3"] = existing_props["left_trial_3"]
+            
+        if contact.left_avg is not None:
+            new_properties["left_avg"] = str(contact.left_avg)
+        elif existing_props.get("left_avg"):
+            new_properties["left_avg"] = existing_props["left_avg"]
+            
+        if contact.right_trial_1 is not None:
+            new_properties["right_trial_1"] = str(contact.right_trial_1)
+        elif existing_props.get("right_trial_1"):
+            new_properties["right_trial_1"] = existing_props["right_trial_1"]
+            
+        if contact.right_trial_2 is not None:
+            new_properties["right_trial_2"] = str(contact.right_trial_2)
+        elif existing_props.get("right_trial_2"):
+            new_properties["right_trial_2"] = existing_props["right_trial_2"]
+            
+        if contact.right_trial_3 is not None:
+            new_properties["right_trial_3"] = str(contact.right_trial_3)
+        elif existing_props.get("right_trial_3"):
+            new_properties["right_trial_3"] = existing_props["right_trial_3"]
+            
+        if contact.right_avg is not None:
+            new_properties["right_avg"] = str(contact.right_avg)
+        elif existing_props.get("right_avg"):
+            new_properties["right_avg"] = existing_props["right_avg"]
             
         if contact.posture is not None:
             new_properties["posture"] = contact.posture
@@ -626,6 +734,14 @@ async def update_hubspot_contact(contact_id: str, contact: HubSpotContactUpdate)
             trial_2=float(props["trial_2"]) if props.get("trial_2") else None,
             trial_3=float(props["trial_3"]) if props.get("trial_3") else None,
             average_trial=float(props["average_trial"]) if props.get("average_trial") else None,
+            left_trial_1=float(props["left_trial_1"]) if props.get("left_trial_1") else None,
+            left_trial_2=float(props["left_trial_2"]) if props.get("left_trial_2") else None,
+            left_trial_3=float(props["left_trial_3"]) if props.get("left_trial_3") else None,
+            left_avg=float(props["left_avg"]) if props.get("left_avg") else None,
+            right_trial_1=float(props["right_trial_1"]) if props.get("right_trial_1") else None,
+            right_trial_2=float(props["right_trial_2"]) if props.get("right_trial_2") else None,
+            right_trial_3=float(props["right_trial_3"]) if props.get("right_trial_3") else None,
+            right_avg=float(props["right_avg"]) if props.get("right_avg") else None,
             posture=props.get("posture"),
             test_date=props.get("test_date"),
             last_synced_reading_at=props.get("last_synced_reading_at"),
