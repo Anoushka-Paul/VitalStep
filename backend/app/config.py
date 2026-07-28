@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     
     # API Configuration
     API_PREFIX: str = "/api/v1"
-    CORS_ORIGINS: list[str] = ["*"]  # Configure properly for production
+    CORS_ORIGINS: str = "*"  # Will be parsed to list in validator
     
     # Primary Supabase Database
     SUPABASE_URL: str = Field(default="https://cbebmpgsbxqdzpfgqulj.supabase.co")
@@ -47,19 +47,16 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(default="your-secret-key-change-in-production")
     API_KEY_HEADER: str = "X-API-Key"
     
-    @model_validator(mode="before")
+    @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
-    def parse_env_vars(cls, values):
-        """Parse environment variables before validation"""
-        if isinstance(values, dict):
-            cors = values.get("CORS_ORIGINS")
-            if isinstance(cors, str):
-                cors = cors.strip()
-                if cors == "*":
-                    values["CORS_ORIGINS"] = ["*"]
-                else:
-                    values["CORS_ORIGINS"] = [origin.strip() for origin in cors.split(",") if origin.strip()]
-        return values
+    def parse_cors_origins(cls, v):
+        """Parse CORS_ORIGINS from string to list"""
+        if isinstance(v, str):
+            v = v.strip()
+            if v == "*":
+                return ["*"]
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
     
     @property
     def is_production(self) -> bool:
