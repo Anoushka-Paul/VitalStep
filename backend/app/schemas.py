@@ -3,7 +3,7 @@ Pydantic schemas for request/response validation
 """
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 # ============================================================================
@@ -168,6 +168,59 @@ class HubSpotSyncResponse(BaseModel):
     hubspot_id: Optional[str] = Field(None, description="HubSpot contact ID")
     message: Optional[str] = Field(None, description="Additional message")
     phone_normalized: str = Field(..., description="Normalized phone number used")
+
+
+# ============================================================================
+# HubSpot Contact CRUD Schemas
+# ============================================================================
+
+class HubSpotContactBase(BaseModel):
+    """Base HubSpot contact schema"""
+    firstname: Optional[str] = Field(None, max_length=200)
+    lastname: Optional[str] = Field(None, max_length=200)
+    phone: Optional[str] = Field(None, max_length=50)
+    email: Optional[str] = Field(None, max_length=200)
+    age: Optional[int] = Field(None, ge=0, le=150)
+    gender: Optional[str] = Field(None, max_length=50)
+    condition: Optional[str] = Field(None, max_length=200)
+    dominant_hand: Optional[str] = Field(None, pattern="^(left|right|ambidextrous)$")
+    patient_code: Optional[str] = Field(None, max_length=50)
+    device_id: Optional[str] = Field(None, max_length=100)
+    trial_1: Optional[float] = Field(None, ge=0)
+    trial_2: Optional[float] = Field(None, ge=0)
+    trial_3: Optional[float] = Field(None, ge=0)
+    average_trial: Optional[float] = Field(None, ge=0)
+    posture: Optional[str] = Field(None, max_length=100)
+    test_date: Optional[datetime] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def convert_empty_strings(cls, data):
+        if isinstance(data, dict):
+            return {k: (None if v == "" else v) for k, v in data.items()}
+        return data
+
+
+class HubSpotContactCreate(HubSpotContactBase):
+    """Schema for creating a new HubSpot contact"""
+    firstname: str = Field(..., min_length=1, max_length=200)
+    phone: str = Field(..., min_length=10, max_length=50)
+
+
+class HubSpotContactUpdate(HubSpotContactBase):
+    """Schema for updating a HubSpot contact"""
+    pass
+
+
+class HubSpotContactResponse(HubSpotContactBase):
+    """Schema for HubSpot contact response"""
+    id: str
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+    last_synced_reading_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
 
 
 # ============================================================================

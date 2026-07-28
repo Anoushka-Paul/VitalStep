@@ -33,7 +33,7 @@ def supabase_request(path: str, params: dict | None = None) -> list:
     return resp.json()
 
 
-def hubspot_request(path: str, method: str = "GET", payload: dict | None = None) -> dict:
+def hubspot_request(path: str, method: str = "GET", payload: dict | None = None, params: dict | None = None) -> dict:
     """Make a request to HubSpot API."""
     if not HUBSPOT_PAT:
         raise RuntimeError("HUBSPOT_PAT not set")
@@ -43,11 +43,13 @@ def hubspot_request(path: str, method: str = "GET", payload: dict | None = None)
         "Content-Type": "application/json",
     }
     if method == "GET":
-        resp = requests.get(url, headers=headers, timeout=20)
+        resp = requests.get(url, headers=headers, params=params, timeout=20)
     elif method == "POST":
         resp = requests.post(url, headers=headers, json=payload, timeout=20)
     elif method == "PATCH":
         resp = requests.patch(url, headers=headers, json=payload, timeout=20)
+    elif method == "DELETE":
+        resp = requests.delete(url, headers=headers, timeout=20)
     else:
         raise RuntimeError("Unsupported method")
     
