@@ -6,6 +6,7 @@ import logging
 import uuid
 import joblib
 import numpy as np
+import requests
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 from datetime import datetime
@@ -14,6 +15,13 @@ from app.config import settings
 from app.schemas import MLPredictionRequest, MLPredictionResponse, PredictionRecord
 
 logger = logging.getLogger(__name__)
+
+GITHUB_RAW_BASE = "https://raw.githubusercontent.com/Anoushka-Paul/VitalStep/main/ml/artifacts"
+MODEL_DOWNLOAD_NAMES = [
+    "force_quantiles_enhanced.joblib",
+    "force_quantiles_improved.joblib",
+    "force_quantiles.joblib",
+]
 
 
 class MLModelService:
@@ -35,6 +43,22 @@ class MLModelService:
         
         # In-memory prediction history
         self.predictions: Dict[str, PredictionRecord] = {}
+    
+    def _download_model(self, destination: Path) -> bool:
+        """Download model from GitHub if not present locally."""
+        for name in MODEL_DOWNLOAD_NAMES:
+            url = f"{GITHUB_RAW_BASE}/{name}"
+            try:
+                logger.info(f"Attempting to download ML model from {url}")
+                response = requests.get(url, timeout=60)
+                response.raise_for_status()
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(response.content)
+                logger.info(f"Downloaded model to {destination}")
+                return True
+            except Exception as exc:
+                logger.warning(f"Failed to download {name}: {exc}")
+        return False
     
     def load_model(self) -> bool:
         """
@@ -59,7 +83,14 @@ class MLModelService:
                     break
             
             if not model_file:
-                logger.warning(f"No model file found in {self.model_path}, using fallback predictions")
+                logger.warning(f"No model file found in {self.model_path}, attempting download...")
+                # Default download target
+                download_target = self.model_path / "force_quantiles_enhanced.joblib"
+                if self._download_model(download_target):
+                    model_file = download_target
+            
+            if not model_file:
+                logger.warning("ML model not available, using fallback predictions")
                 self.is_loaded = False
                 return False
             
