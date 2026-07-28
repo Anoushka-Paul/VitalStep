@@ -193,6 +193,13 @@ class HubSpotContactBase(BaseModel):
     posture: Optional[str] = Field(None, max_length=100)
     test_date: Optional[datetime] = None
 
+    @field_validator("dominant_hand", mode="before")
+    @classmethod
+    def lowercase_dominant_hand(cls, v):
+        if v is not None and isinstance(v, str):
+            return v.lower()
+        return v
+
     @model_validator(mode="before")
     @classmethod
     def convert_empty_strings(cls, data):
