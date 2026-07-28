@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY ./app ./app
 COPY hubspot_utils.py ./hubspot_utils.py
+COPY ml/artifacts /ml/artifacts
 
 # ML artifacts will be downloaded or mounted separately if needed
 # The app works without them using fallback predictions

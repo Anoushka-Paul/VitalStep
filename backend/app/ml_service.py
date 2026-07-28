@@ -44,11 +44,22 @@ class MLModelService:
             bool: True if model loaded successfully
         """
         try:
-            # Try to load the latest model
-            model_file = self.model_path / "quantile_model_enhanced.pkl"
+            # Try multiple model filenames in order of preference
+            model_candidates = [
+                self.model_path / "quantile_model_enhanced.pkl",
+                self.model_path / "force_quantiles_enhanced.joblib",
+                self.model_path / "force_quantiles_improved.joblib",
+                self.model_path / "force_quantiles.joblib",
+            ]
             
-            if not model_file.exists():
-                logger.warning(f"Model file not found at {model_file}, using fallback predictions")
+            model_file = None
+            for candidate in model_candidates:
+                if candidate.exists():
+                    model_file = candidate
+                    break
+            
+            if not model_file:
+                logger.warning(f"No model file found in {self.model_path}, using fallback predictions")
                 self.is_loaded = False
                 return False
             
