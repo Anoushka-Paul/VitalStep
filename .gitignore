@@ -51,6 +51,7 @@ analysis_output.txt
 !requirements.txt
 # Local ML training data and generated model artifacts.
 # Keep clinical/reference datasets and fitted models out of source control.
+# Note: ml/artifacts/ is kept in repo for deployment so Docker can COPY it.
+# /ml/artifacts/
 /data/*.csv
-/ml/artifacts/
 /.venv/
