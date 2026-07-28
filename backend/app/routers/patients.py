@@ -70,7 +70,7 @@ async def get_patients(
 
 
 @router.get("/{patient_id}", response_model=PatientResponse)
-async def get_patient(patient_id: int, database: str = "primary"):
+async def get_patient(patient_id: str, database: str = "primary"):
     """
     Get patient by ID
     
@@ -200,7 +200,7 @@ async def create_patient(patient: PatientCreate, database: str = "primary"):
 
 
 @router.patch("/{patient_id}", response_model=PatientResponse)
-async def update_patient(patient_id: int, patient: PatientCreate, database: str = "primary"):
+async def update_patient(patient_id: str, patient: PatientCreate, database: str = "primary"):
     """
     Update patient
     
@@ -238,7 +238,7 @@ async def update_patient(patient_id: int, patient: PatientCreate, database: str 
 
 
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_patient(patient_id: int, database: str = "primary"):
+async def delete_patient(patient_id: str, database: str = "primary"):
     """
     Delete patient
     
@@ -276,7 +276,7 @@ async def delete_patient(patient_id: int, database: str = "primary"):
 
 @router.get("/{patient_id}/readings", response_model=List[TrialReadingResponse])
 async def get_patient_readings(
-    patient_id: int,
+    patient_id: str,
     limit: int = Query(10, ge=1, le=100),
     database: str = "primary"
 ):
@@ -300,7 +300,7 @@ async def get_patient_readings(
 
 
 @router.get("/{patient_id}/readings/latest", response_model=TrialReadingWithPatient)
-async def get_latest_reading(patient_id: int, database: str = "primary"):
+async def get_latest_reading(patient_id: str, database: str = "primary"):
     """
     Get latest trial reading for a patient
     
@@ -337,7 +337,7 @@ async def get_latest_reading(patient_id: int, database: str = "primary"):
 
 
 @router.post("/{patient_id}/readings", response_model=TrialReadingResponse, status_code=status.HTTP_201_CREATED)
-async def create_trial_reading(patient_id: int, reading: TrialReadingCreate, database: str = "primary"):
+async def create_trial_reading(patient_id: str, reading: TrialReadingCreate, database: str = "primary"):
     """
     Create new trial reading for patient
     
