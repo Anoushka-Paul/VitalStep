@@ -6,6 +6,7 @@ import os
 import sys
 import time
 import logging
+import uuid
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status, Query
 
@@ -74,10 +75,18 @@ async def get_patient(patient_id: str, database: str = "primary"):
     """
     Get patient by ID
     
-    - **patient_id**: Patient ID
+    - **patient_id**: Patient ID (UUID)
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
+        try:
+            uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid patient ID format: '{patient_id}' is not a valid UUID"
+            )
+        
         repo = PatientRepository(database=database)
         patient = repo.get_by_id(patient_id)
         
@@ -204,11 +213,19 @@ async def update_patient(patient_id: str, patient: PatientCreate, database: str 
     """
     Update patient
     
-    - **patient_id**: Patient ID to update
+    - **patient_id**: Patient ID to update (UUID)
     - **patient**: Updated patient data
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
+        try:
+            uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid patient ID format: '{patient_id}' is not a valid UUID"
+            )
+        
         log_request({"patient_id": patient_id, "data": patient.dict()}, logger)
         
         repo = PatientRepository(database=database)
@@ -242,10 +259,18 @@ async def delete_patient(patient_id: str, database: str = "primary"):
     """
     Delete patient
     
-    - **patient_id**: Patient ID to delete
+    - **patient_id**: Patient ID to delete (UUID)
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
+        try:
+            uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid patient ID format: '{patient_id}' is not a valid UUID"
+            )
+        
         repo = PatientRepository(database=database)
         
         # Check if patient exists
@@ -283,14 +308,24 @@ async def get_patient_readings(
     """
     Get all trial readings for a patient
     
-    - **patient_id**: Patient ID
+    - **patient_id**: Patient ID (UUID)
     - **limit**: Number of readings to return
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
+        try:
+            uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid patient ID format: '{patient_id}' is not a valid UUID"
+            )
+        
         repo = TrialReadingRepository(database=database)
         readings = repo.get_by_patient(patient_id, limit=limit)
         return readings
+    except HTTPException:
+        raise
     except Exception as e:
         log_error(e, logger, {"patient_id": patient_id})
         raise HTTPException(
@@ -304,10 +339,18 @@ async def get_latest_reading(patient_id: str, database: str = "primary"):
     """
     Get latest trial reading for a patient
     
-    - **patient_id**: Patient ID
+    - **patient_id**: Patient ID (UUID)
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
+        try:
+            uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid patient ID format: '{patient_id}' is not a valid UUID"
+            )
+        
         repo = TrialReadingRepository(database=database)
         reading = repo.get_latest_by_patient(patient_id)
         
@@ -341,11 +384,19 @@ async def create_trial_reading(patient_id: str, reading: TrialReadingCreate, dat
     """
     Create new trial reading for patient
     
-    - **patient_id**: Patient ID
+    - **patient_id**: Patient ID (UUID)
     - **reading**: Trial reading data
     - **database**: Database to use ("primary" or "secondary")
     """
     try:
+        try:
+            uuid.UUID(patient_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid patient ID format: '{patient_id}' is not a valid UUID"
+            )
+        
         log_request({"patient_id": patient_id, "reading": reading.dict()}, logger)
         
         # Verify patient exists
