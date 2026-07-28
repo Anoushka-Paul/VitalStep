@@ -44,9 +44,9 @@ logs/
 .DS_Store
 Thumbs.db
 
-# ML Artifacts (will be mounted separately in production)
-ml/artifacts/*.pkl
-ml/artifacts/*.joblib
+# ML Artifacts (kept in repo for Docker build)
+# ml/artifacts/*.pkl
+# ml/artifacts/*.joblib
 
 # Temporary files
 tmp/
