@@ -258,29 +258,39 @@ async def get_hubspot_contacts(
         
         if search:
             search_payload = {
-                "filterGroups": [{
-                    "filters": [
-                        {
-                            "propertyName": "firstname",
-                            "operator": "CONTAINS_TOKEN",
-                            "value": search,
-                        },
-                        {
-                            "propertyName": "lastname",
-                            "operator": "CONTAINS_TOKEN",
-                            "value": search,
-                        },
-                    ]
-                }],
+                "filterGroups": [
+                    {
+                        "filters": [
+                            {
+                                "propertyName": "firstname",
+                                "operator": "CONTAINS_TOKEN",
+                                "value": search,
+                            }
+                        ]
+                    },
+                    {
+                        "filters": [
+                            {
+                                "propertyName": "lastname",
+                                "operator": "CONTAINS_TOKEN",
+                                "value": search,
+                            }
+                        ]
+                    }
+                ],
                 "properties": properties,
                 "limit": limit,
                 "after": str(offset) if offset else None,
             }
             if search and "@" in search and "." in search:
-                search_payload["filterGroups"][0]["filters"].append({
-                    "propertyName": "email",
-                    "operator": "EQ",
-                    "value": search,
+                search_payload["filterGroups"].append({
+                    "filters": [
+                        {
+                            "propertyName": "email",
+                            "operator": "EQ",
+                            "value": search,
+                        }
+                    ]
                 })
             
             # Remove None values

@@ -195,9 +195,15 @@ class HubSpotContactBase(BaseModel):
 
     @field_validator("dominant_hand", mode="before")
     @classmethod
-    def lowercase_dominant_hand(cls, v):
-        if v is not None and isinstance(v, str):
-            return v.lower()
+    def normalize_dominant_hand(cls, v):
+        if v is None or v == "":
+            return None
+        if isinstance(v, str):
+            v_lower = v.strip().lower()
+            if v_lower in ("false", "true", "none", "null", "n/a"):
+                return None
+            if v_lower in ("left", "right", "ambidextrous"):
+                return v_lower
         return v
 
     @model_validator(mode="before")
