@@ -161,7 +161,7 @@ class BaseRepository:
             )
             return response.data
     
-    def get_by_id(self, id: int) -> Optional[Dict[str, Any]]:
+    def get_by_id(self, id: str) -> Optional[Dict[str, Any]]:
         """Get record by ID"""
         with self.db.get_connection(self.database) as client:
             response = (
@@ -171,7 +171,7 @@ class BaseRepository:
                 .execute()
             )
             return response.data[0] if response.data else None
-    
+
     def get_by_field(self, field: str, value: Any) -> List[Dict[str, Any]]:
         """Get records by field value"""
         with self.db.get_connection(self.database) as client:
@@ -182,7 +182,7 @@ class BaseRepository:
                 .execute()
             )
             return response.data
-    
+
     def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """Create new record"""
         with self.db.get_connection(self.database) as client:
@@ -192,8 +192,8 @@ class BaseRepository:
                 .execute()
             )
             return response.data[0] if response.data else data
-    
-    def update(self, id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+
+    def update(self, id: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Update record by ID"""
         with self.db.get_connection(self.database) as client:
             response = (
@@ -203,8 +203,8 @@ class BaseRepository:
                 .execute()
             )
             return response.data[0] if response.data else data
-    
-    def delete(self, id: int) -> bool:
+
+    def delete(self, id: str) -> bool:
         """Delete record by ID"""
         with self.db.get_connection(self.database) as client:
             response = (
@@ -252,7 +252,7 @@ class TrialReadingRepository(BaseRepository):
     def __init__(self, database: str = "primary"):
         super().__init__("patient_readings", database)
     
-    def get_latest_by_patient(self, patient_id: int) -> Optional[Dict[str, Any]]:
+    def get_latest_by_patient(self, patient_id: str) -> Optional[Dict[str, Any]]:
         """Get latest reading for a patient"""
         with self.db.get_connection(self.database) as client:
             response = (
@@ -264,8 +264,8 @@ class TrialReadingRepository(BaseRepository):
                 .execute()
             )
             return response.data[0] if response.data else None
-    
-    def get_by_patient(self, patient_id: int, limit: int = 10) -> List[Dict[str, Any]]:
+
+    def get_by_patient(self, patient_id: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Get all readings for a patient"""
         with self.db.get_connection(self.database) as client:
             response = (

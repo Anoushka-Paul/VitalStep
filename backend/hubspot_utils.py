@@ -87,8 +87,31 @@ def normalize_phone(phone: str) -> str:
     return f"+91{digits}"
 
 
+_contact_properties_cache: set[str] | None = None
+
+
+def _get_existing_contact_properties() -> set[str]:
+    """Fetch existing HubSpot contact property names."""
+    try:
+        result = hubspot_request("/crm/v3/properties/contacts")
+        return {p["name"] for p in result.get("results", [])}
+    except Exception:
+        return set()
+
+
 def ensure_contact_properties() -> None:
-    """Ensure all custom properties exist in HubSpot."""
+    """Ensure all custom properties exist in HubSpot.
+
+    Checks existing properties first to avoid 409 Conflict errors
+    on every call. Results are cached for the process lifetime.
+    """
+    global _contact_properties_cache
+
+    if _contact_properties_cache is None:
+        _contact_properties_cache = _get_existing_contact_properties()
+
+    existing = _contact_properties_cache
+
     for name, label, prop_type, field_type in [
         ("dominant_hand", "Dominant Hand", "string", "text"),
         ("patient_code", "Patient Code", "string", "text"),
@@ -114,6 +137,8 @@ def ensure_contact_properties() -> None:
         ("average_kg", "Average KG", "number", "number"),
         ("created_at", "Created At", "datetime", "date"),
     ]:
+        if name in existing:
+            continue
         payload = {
             "name": name,
             "label": label,
@@ -124,12 +149,14 @@ def ensure_contact_properties() -> None:
         try:
             hubspot_request("/crm/v3/properties/contacts", method="POST", payload=payload)
             print(f"✓ Created property: {name}")
+            existing.add(name)
         except Exception as exc:
             message = str(exc).lower()
             if "already exists" not in message and "duplicate" not in message and "400" not in message:
                 print(f"✗ Error creating property {name}: {exc}")
             else:
                 print(f"✓ Property already exists: {name}")
+                existing.add(name)
 
 
 def find_contact_by_phone(phone: str) -> tuple[str | None, dict | None]:

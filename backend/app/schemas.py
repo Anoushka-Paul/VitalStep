@@ -18,6 +18,13 @@ class PatientBase(BaseModel):
     dominant_hand: Optional[str] = Field(None, pattern="^(left|right|ambidextrous)$")
     patient_code: Optional[str] = Field(None, max_length=50)
 
+    @field_validator("dominant_hand", mode="before")
+    @classmethod
+    def lowercase_dominant_hand(cls, v):
+        if v is not None and isinstance(v, str):
+            return v.lower()
+        return v
+
 
 class PatientCreate(PatientBase):
     """Schema for creating a new patient"""
@@ -46,6 +53,13 @@ class TrialReadingBase(BaseModel):
     hand: Optional[str] = Field(None, pattern="^(left|right)$")
     posture: Optional[str] = Field(None, max_length=100)
     assessment_type: Optional[str] = Field(None, max_length=100)
+
+    @field_validator("hand", mode="before")
+    @classmethod
+    def lowercase_hand(cls, v):
+        if v is not None and isinstance(v, str):
+            return v.lower()
+        return v
 
 
 class TrialReadingCreate(TrialReadingBase):
@@ -81,7 +95,14 @@ class MLPredictionRequest(BaseModel):
     hand: Optional[str] = Field(None, pattern="^(left|right)$", description="Dominant hand")
     posture: Optional[str] = Field(None, description="Posture during test")
     age: Optional[int] = Field(None, ge=0, le=150, description="Patient age")
-    
+
+    @field_validator("hand", mode="before")
+    @classmethod
+    def lowercase_hand(cls, v):
+        if v is not None and isinstance(v, str):
+            return v.lower()
+        return v
+
     @field_validator("trial1", "trial2", "trial3")
     def validate_trials(cls, v):
         if v > 200:  # Reasonable max for grip strength
