@@ -17,6 +17,8 @@ from hubspot_utils import (
     find_contact_by_phone,
     find_contact_by_email,
     find_contact_by_name,
+    upsert_contact_by_phone,
+    merge_contact_data,
 )
 from app.logging_config import log_request, log_response, log_error
 
