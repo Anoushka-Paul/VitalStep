@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     HUBSPOT_PAT: Optional[str] = None
     
     # ML Model Configuration
-    MODEL_PATH: str = Field(default="../ml/artifacts")
+    MODEL_PATH: str = Field(default="ml/artifacts")
     MODEL_VERSION: str = "latest"
     
     # Logging

@@ -21,7 +21,7 @@ COPY hubspot_utils.py ./hubspot_utils.py
 # ML model artifacts are downloaded at runtime from GitHub if not present locally
 
 # Create non-root user
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app /ml
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
 
 # Expose port
