@@ -202,21 +202,34 @@ async def register(request: RegisterRequest):
         supabase = get_supabase_client()
         
         # Create user in Supabase Auth
-        response = supabase.auth.sign_up({
-            "email": request.email,
-            "password": request.password,
-            "options": {
-                "data": {
-                    "name": request.name,
-                    "user_type": request.user_type
+        try:
+            response = supabase.auth.sign_up({
+                "email": request.email,
+                "password": request.password,
+                "options": {
+                    "data": {
+                        "name": request.name,
+                        "user_type": request.user_type
+                    }
                 }
-            }
-        })
+            })
+        except Exception as auth_error:
+            # Supabase throws an error if user already exists
+            error_str = str(auth_error).lower()
+            if "already" in error_str or "exists" in error_str or "duplicate" in error_str:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="An account with this email already exists. Please login instead."
+                )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Registration failed: {str(auth_error)}"
+            )
         
         if response.user is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Registration failed. Email may already be registered."
+                detail="Registration failed. Please try again."
             )
         
         user = response.user

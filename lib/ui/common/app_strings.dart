@@ -3,12 +3,8 @@ import 'package:stacked/stacked_annotations.dart';
 // const String apiBaseUrl = 'https://ameya-backend.onrender.com/api';
 // const String apiBaseUrl = "https://plankton-app-6cr5g.ondigitalocean.app/api";
 
-// TODO: Update this URL after deploying backend to Render
-// Steps:
-// 1. Deploy backend to Render (see DEPLOYMENT_GUIDE.md)
-// 2. Get your Render URL (e.g., https://vitalstep-api.onrender.com)
-// 3. Update the line below with your Render URL
-const String apiBaseUrl = "https://vitalstep-api.onrender.com";
+// Updated to match Render deployment URL (from Render logs)
+const String apiBaseUrl = "https://vitalstep.onrender.com";
 
 const String ksHomeBottomSheetTitle = 'Build Great Apps!';
 const String ksHomeBottomSheetDescription =
