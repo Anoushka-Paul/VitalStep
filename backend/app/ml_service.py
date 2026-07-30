@@ -211,17 +211,18 @@ class MLModelService:
         Returns:
             ML prediction response
         """
-        # Simple rule-based categorization
-        if average < 20:
+        # Rule-based categorization based on training data (5-8 kg normal range for males sitting)
+        # These thresholds are calibrated to match the actual training data distribution
+        if average < 3:
             category = "Weak"
-            percentile = 10.0
-        elif average < 30:
+            percentile = 5.0
+        elif average < 5:
             category = "Below Average"
-            percentile = 30.0
-        elif average < 45:
+            percentile = 25.0
+        elif average < 10:
             category = "Average"
             percentile = 50.0
-        elif average < 60:
+        elif average < 15:
             category = "Above Average"
             percentile = 75.0
         else:
@@ -240,14 +241,14 @@ class MLModelService:
         )
     
     def _get_category(self, value: float) -> str:
-        """Get category based on value"""
-        if value < 20:
+        """Get category based on value - calibrated to training data (5-8 kg normal range)"""
+        if value < 3:
             return "Weak"
-        elif value < 30:
+        elif value < 5:
             return "Below Average"
-        elif value < 45:
+        elif value < 10:
             return "Average"
-        elif value < 60:
+        elif value < 15:
             return "Above Average"
         else:
             return "Strong"
