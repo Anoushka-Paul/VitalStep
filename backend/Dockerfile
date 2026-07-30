@@ -17,8 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY ./app ./app
 COPY hubspot_utils.py ./hubspot_utils.py
-
-# ML model artifacts are downloaded at runtime from GitHub if not present locally
+COPY ml/artifacts /app/ml/artifacts
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app

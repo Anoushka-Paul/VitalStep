@@ -7,7 +7,6 @@ import uuid
 import joblib
 import numpy as np
 import pandas as pd
-import requests
 from typing import Optional, List, Dict, Any
 from pathlib import Path
 from datetime import datetime
@@ -16,12 +15,6 @@ from app.config import settings
 from app.schemas import MLPredictionRequest, MLPredictionResponse, PredictionRecord
 
 logger = logging.getLogger(__name__)
-
-GITHUB_RAW_BASE = "https://raw.githubusercontent.com/Anoushka-Paul/VitalStep/main/ml/artifacts"
-# ONLY use the enhanced model - it's the most accurate
-MODEL_DOWNLOAD_NAMES = [
-    "force_quantiles_enhanced.joblib",
-]
 
 
 class MLModelService:
@@ -44,22 +37,6 @@ class MLModelService:
         # In-memory prediction history
         self.predictions: Dict[str, PredictionRecord] = {}
     
-    def _download_model(self, destination: Path) -> bool:
-        """Download model from GitHub if not present locally."""
-        for name in MODEL_DOWNLOAD_NAMES:
-            url = f"{GITHUB_RAW_BASE}/{name}"
-            try:
-                logger.info(f"Attempting to download ML model from {url}")
-                response = requests.get(url, timeout=60)
-                response.raise_for_status()
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                destination.write_bytes(response.content)
-                logger.info(f"Downloaded model to {destination}")
-                return True
-            except Exception as exc:
-                logger.warning(f"Failed to download {name}: {exc}")
-        return False
-    
     def load_model(self) -> bool:
         """
         Load ML model from disk
@@ -68,46 +45,24 @@ class MLModelService:
             bool: True if model loaded successfully
         """
         try:
-            # Try multiple model filenames in order of preference
-            model_candidates = [
-                self.model_path / "force_quantiles_enhanced.joblib",
-                self.model_path / "force_quantiles_improved.joblib",
-                self.model_path / "force_quantiles.joblib",
-                self.model_path / "quantile_model_enhanced.pkl",
-            ]
+            model_file = self.model_path / "force_quantiles_enhanced.joblib"
             
-            model_file = None
-            for candidate in model_candidates:
-                if candidate.exists():
-                    model_file = candidate
-                    logger.info(f"Found model file: {candidate}")
-                    break
-            
-            if not model_file:
-                logger.warning(f"No model file found in {self.model_path}, attempting download...")
-                # Default download target
-                download_target = self.model_path / "force_quantiles_enhanced.joblib"
-                if self._download_model(download_target):
-                    model_file = download_target
-            
-            if not model_file:
-                logger.warning("ML model not available, using fallback predictions")
+            if not model_file.exists():
+                logger.warning(f"Model file not found at {model_file}, using fallback predictions")
                 self.is_loaded = False
                 return False
             
-            logger.info(f"Loading ML model from {model_file}...")
             self.model = joblib.load(model_file)
             self.is_loaded = True
             self.load_timestamp = datetime.now()
             
-            logger.info(f"✓ ML model loaded successfully from {model_file}")
-            logger.info(f"✓ Model version: {self.model_version}")
-            logger.info(f"✓ Model type: {type(self.model)}")
+            logger.info(f"ML model loaded successfully from {model_file}")
+            logger.info(f"Model version: {self.model_version}")
             
             return True
             
         except Exception as e:
-            logger.error(f"✗ Failed to load ML model: {e}", exc_info=True)
+            logger.error(f"Failed to load ML model: {e}")
             self.is_loaded = False
             self.model = None
             return False
