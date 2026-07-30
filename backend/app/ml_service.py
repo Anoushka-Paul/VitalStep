@@ -6,6 +6,7 @@ import logging
 import uuid
 import joblib
 import numpy as np
+import pandas as pd
 import requests
 from typing import Optional, List, Dict, Any
 from pathlib import Path
@@ -17,10 +18,9 @@ from app.schemas import MLPredictionRequest, MLPredictionResponse, PredictionRec
 logger = logging.getLogger(__name__)
 
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/Anoushka-Paul/VitalStep/main/ml/artifacts"
+# ONLY use the enhanced model - it's the most accurate
 MODEL_DOWNLOAD_NAMES = [
     "force_quantiles_enhanced.joblib",
-    "force_quantiles_improved.joblib",
-    "force_quantiles.joblib",
 ]
 
 
@@ -160,13 +160,17 @@ class MLModelService:
         """Use loaded quantile regression model for prediction"""
         try:
             # Prepare demographics features for the model
-            # The model expects: age, gender, dominant_hand, height, weight, palm_length, palm_width, knuckle_length, hand, posture
-            features = self._prepare_features(request)
+            features_df = self._prepare_features(request)
+            
+            # Reorder columns to match model's expected feature order
+            expected_features = self.model.get("features", list(features_df.columns))
+            features_df = features_df[expected_features]
             
             # Get quantile predictions (lower, median, upper)
-            lower_pred = self.model["models"]["lower"].predict(features)[0]
-            median_pred = self.model["models"]["median"].predict(features)[0]
-            upper_pred = self.model["models"]["upper"].predict(features)[0]
+            # The model is a Pipeline with preprocessing, so we pass the DataFrame directly
+            lower_pred = self.model["models"]["lower"].predict(features_df)[0]
+            median_pred = self.model["models"]["median"].predict(features_df)[0]
+            upper_pred = self.model["models"]["upper"].predict(features_df)[0]
             
             # Ensure ordering: lower <= median <= upper
             lower_pred = float(np.minimum(lower_pred, median_pred))
@@ -210,21 +214,20 @@ class MLModelService:
         Returns:
             ML prediction response
         """
-        # Fallback thresholds based on typical grip strength ranges
-        if average < 5:
-            category = "Too Low"
+        if average < 20:
+            category = "Weak"
             percentile = 10.0
-        elif average < 10:
-            category = "Low"
-            percentile = 25.0
-        elif average < 15:
-            category = "Normal"
+        elif average < 30:
+            category = "Below Average"
+            percentile = 30.0
+        elif average < 45:
+            category = "Average"
             percentile = 50.0
-        elif average < 25:
-            category = "High"
+        elif average < 60:
+            category = "Above Average"
             percentile = 75.0
         else:
-            category = "Too High"
+            category = "Strong"
             percentile = 90.0
         
         recommendations = self._generate_recommendations(average, request, category)
@@ -238,37 +241,45 @@ class MLModelService:
             model_version="fallback-rules"
         )
     
-    def _prepare_features(self, request: MLPredictionRequest) -> np.ndarray:
-        """Prepare feature vector for model prediction from demographics"""
-        # Extract demographics with defaults
-        age = request.age if request.age else 35
-        gender = request.gender if request.gender else "Male"
-        dominant_hand = request.dominant_hand if request.dominant_hand else request.hand
-        height = request.height if request.height else 170.0
-        weight = request.weight if request.weight else 70.0
-        palm_length = request.palm_length if request.palm_length else 18.0
-        palm_width = request.palm_width if request.palm_width else 8.5
-        knuckle_length = request.knuckle_length if request.knuckle_length else 15.0
-        hand = request.hand if request.hand else "right"
-        posture = request.posture if request.posture else "sitting"
+    def _prepare_features(self, request: MLPredictionRequest) -> pd.DataFrame:
+        """Prepare feature DataFrame for model prediction - matches training pipeline exactly"""
+        age = getattr(request, 'age', None) or 35
+        gender = getattr(request, 'gender', None) or "Male"
+        dominant_hand = getattr(request, 'dominant_hand', None) or getattr(request, 'hand', None) or "right"
+        height = getattr(request, 'height', None) or 170.0
+        weight = getattr(request, 'weight', None) or 70.0
+        palm_length = getattr(request, 'palm_length', None) or 18.0
+        palm_width = getattr(request, 'palm_width', None) or 8.5
+        knuckle_length = getattr(request, 'knuckle_length', None) or 15.0
+        hand = getattr(request, 'hand', None) or "right"
+        posture = getattr(request, 'posture', None) or "sitting"
         
-        # Calculate BMI
         bmi = weight / ((height / 100) ** 2) if height > 0 else 22.0
         
-        # Encode categorical features (must match training encoding)
-        gender_encoded = 1 if gender.lower() == "male" else 0
-        dominant_hand_encoded = 1 if dominant_hand.lower() == "right" else 0
-        hand_encoded = 1 if hand.lower() == "right" else 0
-        posture_encoded = hash(posture.lower()) % 10
+        data = {
+            "age": [age],
+            "height": [height],
+            "weight": [weight],
+            "bmi": [bmi],
+            "palm_length": [palm_length],
+            "palm_width": [palm_width],
+            "knuckle_length": [knuckle_length],
+            "gender": [gender],
+            "dominant_hand": [dominant_hand],
+            "hand": [hand],
+            "posture": [posture],
+            "bmi_age_interaction": [bmi * age],
+            "height_weight_ratio": [height / (weight + 1e-6)],
+            "bmi_squared": [bmi ** 2],
+            "age_squared": [age ** 2],
+            "body_surface_area": [0.007184 * (weight ** 0.425) * (height ** 0.725)],
+            "hand_body_ratio": [palm_length / (height + 1e-6)],
+            "age_group_ordinal": [50.0],
+        }
         
-        # Create feature vector in the correct order
-        features = np.array([[
-            age, gender_encoded, dominant_hand_encoded, height, weight, bmi,
-            palm_length, palm_width, knuckle_length,
-            hand_encoded, posture_encoded
-        ]])
-        
-        return features
+        df = pd.DataFrame(data)
+        df["age_group"] = "Unknown"
+        return df
     
     def _categorize_vs_quantiles(self, actual: float, lower: float, median: float, upper: float) -> tuple[str, float]:
         """
@@ -278,82 +289,74 @@ class MLModelService:
             (category, percentile) tuple
         """
         if actual < lower:
-            # Below 5th percentile - significantly low
-            category = "Too Low"
+            category = "Weak"
             percentile = 5.0
         elif actual < median:
-            # Between 5th and 50th percentile - low
-            category = "Low"
+            category = "Below Average"
             percentile = 25.0
         elif actual < upper:
-            # Between 50th and 95th percentile - normal
-            category = "Normal"
+            category = "Average"
             percentile = 50.0
         elif actual < upper * 1.2:
-            # Between 95th and 120% of upper - high
-            category = "High"
+            category = "Above Average"
             percentile = 75.0
         else:
-            # Above 120% of upper - too high (may indicate medical condition)
-            category = "Too High"
+            category = "Strong"
             percentile = 90.0
         
         return category, percentile
     
     def _get_category(self, value: float) -> str:
-        """Get category based on value - deprecated, use _categorize_vs_quantiles instead"""
-        # This is kept for backward compatibility but should not be used
-        if value < 10:
-            return "Too Low"
-        elif value < 20:
-            return "Low"
-        elif value < 40:
-            return "Normal"
+        """Get category based on value"""
+        if value < 20:
+            return "Weak"
+        elif value < 30:
+            return "Below Average"
+        elif value < 45:
+            return "Average"
         elif value < 60:
-            return "High"
+            return "Above Average"
         else:
-            return "Too High"
+            return "Strong"
     
     def _generate_recommendations(self, average: float, request: MLPredictionRequest, category: str) -> List[str]:
         """Generate health recommendations based on grip strength category"""
         recommendations = []
         
-        if category == "Too Low":
+        if category == "Weak":
             recommendations.extend([
                 "Consider consulting a healthcare provider for a comprehensive assessment",
                 "Start with light resistance training exercises",
-                "Focus on overall physical activity and mobility",
-                "Monitor for potential neurological or muscular conditions"
+                "Focus on overall physical activity and mobility"
             ])
-        elif category == "Low":
+        elif category == "Below Average":
             recommendations.extend([
                 "Regular strength training can help improve grip strength",
                 "Consider exercises like hand squeezers or stress balls",
                 "Maintain a balanced diet with adequate protein intake"
             ])
-        elif category == "Normal":
+        elif category == "Average":
             recommendations.extend([
                 "Good grip strength! Continue regular exercise",
                 "Consider progressive overload training for improvement",
                 "Maintain current fitness routine"
             ])
-        elif category == "High":
+        elif category == "Above Average":
             recommendations.extend([
                 "Excellent grip strength! Keep up the good work",
                 "Consider sharing your fitness routine with others",
                 "Regular assessment helps track long-term progress"
             ])
-        elif category == "Too High":
+        elif category == "Strong":
             recommendations.extend([
-                "Unusually high grip strength detected - this may indicate underlying conditions",
-                "Consider consulting a neurologist to rule out conditions like Parkinson's or dystonia",
-                "Monitor for muscle tension or involuntary movements",
-                "Ensure proper technique during strength assessments"
+                "Exceptional grip strength! Keep challenging yourself",
+                "Consider advanced training techniques",
+                "Regular assessment helps track long-term progress"
             ])
         
         # Age-specific recommendations
         if request.age:
-            if request.age > 60 and average < 15:
+            if request.age > 60 and average < 30:
                 recommendations.append("For your age group, maintaining strength is important - consider physiotherapy exercises")
             elif request.age < 18:
                 recommendations.append("Ensure proper form and supervision during strength exercises")

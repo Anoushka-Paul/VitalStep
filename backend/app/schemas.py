@@ -95,6 +95,13 @@ class MLPredictionRequest(BaseModel):
     hand: Optional[str] = Field(None, pattern="^(left|right)$", description="Dominant hand")
     posture: Optional[str] = Field(None, description="Posture during test")
     age: Optional[int] = Field(None, ge=0, le=150, description="Patient age")
+    gender: Optional[str] = Field(None, max_length=50, description="Patient gender")
+    height: Optional[float] = Field(None, ge=0, description="Height in cm")
+    weight: Optional[float] = Field(None, ge=0, description="Weight in kg")
+    palm_length: Optional[float] = Field(None, ge=0, description="Palm length in cm")
+    palm_width: Optional[float] = Field(None, ge=0, description="Palm width in cm")
+    knuckle_length: Optional[float] = Field(None, ge=0, description="Knuckle length in cm")
+    dominant_hand: Optional[str] = Field(None, max_length=50, description="Dominant hand")
 
     @field_validator("hand", mode="before")
     @classmethod
@@ -105,7 +112,7 @@ class MLPredictionRequest(BaseModel):
 
     @field_validator("trial1", "trial2", "trial3")
     def validate_trials(cls, v):
-        if v > 200:  # Reasonable max for grip strength
+        if v > 200:
             raise ValueError("Trial value seems too high (max 200kg)")
         return v
 
