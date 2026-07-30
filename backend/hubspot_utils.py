@@ -362,11 +362,34 @@ def merge_contact_data(existing_props: dict, new_data: dict) -> dict:
     """
     Merge new data with existing contact data.
     Always updates with new values (no conflict resolution needed).
-    """
-    merged = dict(existing_props)
     
-    # Update with new data
-    for key, value in new_data.items():
+    Filters out HubSpot read-only properties to avoid API errors.
+    """
+    # HubSpot read-only properties that should not be included in updates
+    read_only_properties = {
+        # System properties
+        "createdate", "lastmodifieddate", "hs_lastmodifieddate",
+        "hs_createdate", "hs_object_id", "hs_object_source_id",
+        # Engagement properties
+        "hs_is_unworked", "hs_num_active_contracts", "hs_num_associated_contacts",
+        "hs_num_associated_deals", "hs_num_associated_tickets", "hs_num_associated_quotes",
+        "hs_num_associated_calls", "hs_num_associated_emails", "hs_num_associated_meetings",
+        "hs_num_associated_notes", "hs_num_associated_tasks",
+        # Other read-only properties
+        "hs_analytics_num_page_views", "hs_analytics_num_visits",
+        "hs_analytics_first_timestamp", "hs_analytics_last_timestamp",
+        "hs_analytics_num_event_completions",
+    }
+    
+    # Start with new data (what we want to set)
+    merged = dict(new_data)
+    
+    # Only add existing properties that are not read-only and not in new_data
+    for key, value in existing_props.items():
+        # Skip read-only properties and properties we're already setting
+        if key in read_only_properties or key in new_data:
+            continue
+        # Only include if it has a value
         if value is not None and value != "":
             merged[key] = value
     
