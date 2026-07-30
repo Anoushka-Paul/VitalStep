@@ -1,0 +1,17 @@
+# VitalStep Enhanced ML Training Dependencies
+# Install with: pip install -r ml/requirements_enhanced.txt
+
+# Core ML dependencies
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+requests>=2.31.0
+
+# New dependencies for enhanced training
+optuna>=3.4.0  # Hyperparameter optimization
+scipy>=1.11.0  # Statistical outlier detection
+
+# Optional: For better performance
+# lightgbm>=4.1.0  # Alternative to GradientBoosting (faster)
+# xgboost>=2.0.0  # Alternative to GradientBoosting (more accurate)

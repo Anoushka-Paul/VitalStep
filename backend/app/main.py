@@ -226,12 +226,19 @@ async def root():
 # Router Registration
 # ============================================================================
 
-from app.routers import ml, hubspot, patients
+from app.routers import ml, hubspot, patients, auth, users, tests, queue, devices, remarks, account_access
 
 # Include routers with API prefix
 app.include_router(ml.router, prefix=f"{settings.API_PREFIX}")
 app.include_router(hubspot.router, prefix=f"{settings.API_PREFIX}")
 app.include_router(patients.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(auth.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(users.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(tests.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(queue.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(devices.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(remarks.router, prefix=f"{settings.API_PREFIX}")
+app.include_router(account_access.router, prefix=f"{settings.API_PREFIX}")
 
 
 # ============================================================================
