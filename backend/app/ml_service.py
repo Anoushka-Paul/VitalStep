@@ -70,16 +70,17 @@ class MLModelService:
         try:
             # Try multiple model filenames in order of preference
             model_candidates = [
-                self.model_path / "quantile_model_enhanced.pkl",
                 self.model_path / "force_quantiles_enhanced.joblib",
                 self.model_path / "force_quantiles_improved.joblib",
                 self.model_path / "force_quantiles.joblib",
+                self.model_path / "quantile_model_enhanced.pkl",
             ]
             
             model_file = None
             for candidate in model_candidates:
                 if candidate.exists():
                     model_file = candidate
+                    logger.info(f"Found model file: {candidate}")
                     break
             
             if not model_file:
@@ -94,18 +95,21 @@ class MLModelService:
                 self.is_loaded = False
                 return False
             
+            logger.info(f"Loading ML model from {model_file}...")
             self.model = joblib.load(model_file)
             self.is_loaded = True
             self.load_timestamp = datetime.now()
             
-            logger.info(f"ML model loaded successfully from {model_file}")
-            logger.info(f"Model version: {self.model_version}")
+            logger.info(f"✓ ML model loaded successfully from {model_file}")
+            logger.info(f"✓ Model version: {self.model_version}")
+            logger.info(f"✓ Model type: {type(self.model)}")
             
             return True
             
         except Exception as e:
-            logger.error(f"Failed to load ML model: {e}")
+            logger.error(f"✗ Failed to load ML model: {e}", exc_info=True)
             self.is_loaded = False
+            self.model = None
             return False
     
     def predict(self, request: MLPredictionRequest, save: bool = True) -> MLPredictionResponse:
@@ -113,17 +117,17 @@ class MLModelService:
         Make prediction for a single reading
         
         Args:
-            request: ML prediction request with trial data
+            request: ML prediction request with trial data and demographics
             save: Whether to save prediction to history
             
         Returns:
-            ML prediction response
+            ML prediction response with category based on trained model
         """
         try:
             average = round((request.trial1 + request.trial2 + request.trial3) / 3, 2)
             
             if self.is_loaded and self.model:
-                result = self._model_predict(request)
+                result = self._model_predict(request, average)
             else:
                 result = self._fallback_predict(request, average)
             
@@ -152,44 +156,39 @@ class MLModelService:
             logger.error(f"Prediction error: {e}")
             raise RuntimeError(f"Failed to make prediction: {e}")
     
-    def _model_predict(self, request: MLPredictionRequest) -> MLPredictionResponse:
-        """Use loaded ML model for prediction"""
+    def _model_predict(self, request: MLPredictionRequest, actual_average: float) -> MLPredictionResponse:
+        """Use loaded quantile regression model for prediction"""
         try:
-            # Encode categorical features
-            hand_encoded = 1 if request.hand == "right" else 0
-            posture_encoded = hash(request.posture or "standing") % 10
+            # Prepare demographics features for the model
+            # The model expects: age, gender, dominant_hand, height, weight, palm_length, palm_width, knuckle_length, hand, posture
+            features = self._prepare_features(request)
             
-            # Prepare feature vector
-            features = np.array([[
-                request.trial1,
-                request.trial2,
-                request.trial3,
-                hand_encoded,
-                posture_encoded
-            ]])
+            # Get quantile predictions (lower, median, upper)
+            lower_pred = self.model["models"]["lower"].predict(features)[0]
+            median_pred = self.model["models"]["median"].predict(features)[0]
+            upper_pred = self.model["models"]["upper"].predict(features)[0]
             
-            # Make prediction
-            prediction = self.model.predict(features)[0]
+            # Ensure ordering: lower <= median <= upper
+            lower_pred = float(np.minimum(lower_pred, median_pred))
+            upper_pred = float(np.maximum(upper_pred, median_pred))
+            median_pred = float(median_pred)
             
-            # Get prediction confidence if available
-            confidence = None
-            if hasattr(self.model, 'predict_proba'):
-                proba = self.model.predict_proba(features)[0]
-                confidence = float(max(proba))
+            # Compare actual average against predicted quantiles
+            category, percentile = self._categorize_vs_quantiles(
+                actual_average, lower_pred, median_pred, upper_pred
+            )
             
-            # Calculate percentile (simplified)
-            percentile = min(99.0, max(1.0, (prediction / 100.0) * 100))
-            
-            # Determine category
-            category = self._get_category(prediction)
+            # Calculate confidence based on interval width
+            interval_width = upper_pred - lower_pred
+            confidence = max(0.0, min(1.0, 1.0 - (interval_width / median_pred))) if median_pred > 0 else 0.5
             
             # Generate recommendations
-            recommendations = self._generate_recommendations(prediction, request)
+            recommendations = self._generate_recommendations(actual_average, request, category)
             
             return MLPredictionResponse(
-                average=round((request.trial1 + request.trial2 + request.trial3) / 3, 2),
+                average=actual_average,
                 predicted_category=category,
-                confidence=confidence,
+                confidence=round(confidence, 2),
                 percentile=round(percentile, 1),
                 recommendations=recommendations,
                 model_version=self.model_version
@@ -198,7 +197,7 @@ class MLModelService:
         except Exception as e:
             logger.error(f"Model prediction error: {e}")
             # Fallback to rule-based
-            return self._fallback_predict(request, round((request.trial1 + request.trial2 + request.trial3) / 3, 2))
+            return self._fallback_predict(request, actual_average)
     
     def _fallback_predict(self, request: MLPredictionRequest, average: float) -> MLPredictionResponse:
         """
@@ -211,80 +210,150 @@ class MLModelService:
         Returns:
             ML prediction response
         """
-        # Rule-based categorization based on training data (5-8 kg normal range for males sitting)
-        # These thresholds are calibrated to match the actual training data distribution
-        if average < 3:
-            category = "Weak"
-            percentile = 5.0
-        elif average < 5:
-            category = "Below Average"
-            percentile = 25.0
+        # Fallback thresholds based on typical grip strength ranges
+        if average < 5:
+            category = "Too Low"
+            percentile = 10.0
         elif average < 10:
-            category = "Average"
-            percentile = 50.0
+            category = "Low"
+            percentile = 25.0
         elif average < 15:
-            category = "Above Average"
+            category = "Normal"
+            percentile = 50.0
+        elif average < 25:
+            category = "High"
             percentile = 75.0
         else:
-            category = "Strong"
+            category = "Too High"
             percentile = 90.0
         
-        recommendations = self._generate_recommendations(average, request)
+        recommendations = self._generate_recommendations(average, request, category)
         
         return MLPredictionResponse(
             average=average,
             predicted_category=category,
-            confidence=None,
+            confidence=0.0,
             percentile=percentile,
             recommendations=recommendations,
             model_version="fallback-rules"
         )
     
-    def _get_category(self, value: float) -> str:
-        """Get category based on value - calibrated to training data (5-8 kg normal range)"""
-        if value < 3:
-            return "Weak"
-        elif value < 5:
-            return "Below Average"
-        elif value < 10:
-            return "Average"
-        elif value < 15:
-            return "Above Average"
-        else:
-            return "Strong"
+    def _prepare_features(self, request: MLPredictionRequest) -> np.ndarray:
+        """Prepare feature vector for model prediction from demographics"""
+        # Extract demographics with defaults
+        age = request.age if request.age else 35
+        gender = request.gender if request.gender else "Male"
+        dominant_hand = request.dominant_hand if request.dominant_hand else request.hand
+        height = request.height if request.height else 170.0
+        weight = request.weight if request.weight else 70.0
+        palm_length = request.palm_length if request.palm_length else 18.0
+        palm_width = request.palm_width if request.palm_width else 8.5
+        knuckle_length = request.knuckle_length if request.knuckle_length else 15.0
+        hand = request.hand if request.hand else "right"
+        posture = request.posture if request.posture else "sitting"
+        
+        # Calculate BMI
+        bmi = weight / ((height / 100) ** 2) if height > 0 else 22.0
+        
+        # Encode categorical features (must match training encoding)
+        gender_encoded = 1 if gender.lower() == "male" else 0
+        dominant_hand_encoded = 1 if dominant_hand.lower() == "right" else 0
+        hand_encoded = 1 if hand.lower() == "right" else 0
+        posture_encoded = hash(posture.lower()) % 10
+        
+        # Create feature vector in the correct order
+        features = np.array([[
+            age, gender_encoded, dominant_hand_encoded, height, weight, bmi,
+            palm_length, palm_width, knuckle_length,
+            hand_encoded, posture_encoded
+        ]])
+        
+        return features
     
-    def _generate_recommendations(self, average: float, request: MLPredictionRequest) -> List[str]:
-        """Generate health recommendations based on grip strength"""
+    def _categorize_vs_quantiles(self, actual: float, lower: float, median: float, upper: float) -> tuple[str, float]:
+        """
+        Categorize actual value against predicted quantiles
+        
+        Returns:
+            (category, percentile) tuple
+        """
+        if actual < lower:
+            # Below 5th percentile - significantly low
+            category = "Too Low"
+            percentile = 5.0
+        elif actual < median:
+            # Between 5th and 50th percentile - low
+            category = "Low"
+            percentile = 25.0
+        elif actual < upper:
+            # Between 50th and 95th percentile - normal
+            category = "Normal"
+            percentile = 50.0
+        elif actual < upper * 1.2:
+            # Between 95th and 120% of upper - high
+            category = "High"
+            percentile = 75.0
+        else:
+            # Above 120% of upper - too high (may indicate medical condition)
+            category = "Too High"
+            percentile = 90.0
+        
+        return category, percentile
+    
+    def _get_category(self, value: float) -> str:
+        """Get category based on value - deprecated, use _categorize_vs_quantiles instead"""
+        # This is kept for backward compatibility but should not be used
+        if value < 10:
+            return "Too Low"
+        elif value < 20:
+            return "Low"
+        elif value < 40:
+            return "Normal"
+        elif value < 60:
+            return "High"
+        else:
+            return "Too High"
+    
+    def _generate_recommendations(self, average: float, request: MLPredictionRequest, category: str) -> List[str]:
+        """Generate health recommendations based on grip strength category"""
         recommendations = []
         
-        if average < 25:
+        if category == "Too Low":
             recommendations.extend([
                 "Consider consulting a healthcare provider for a comprehensive assessment",
                 "Start with light resistance training exercises",
-                "Focus on overall physical activity and mobility"
+                "Focus on overall physical activity and mobility",
+                "Monitor for potential neurological or muscular conditions"
             ])
-        elif average < 40:
+        elif category == "Low":
             recommendations.extend([
                 "Regular strength training can help improve grip strength",
                 "Consider exercises like hand squeezers or stress balls",
                 "Maintain a balanced diet with adequate protein intake"
             ])
-        elif average < 55:
+        elif category == "Normal":
             recommendations.extend([
                 "Good grip strength! Continue regular exercise",
                 "Consider progressive overload training for improvement",
                 "Maintain current fitness routine"
             ])
-        else:
+        elif category == "High":
             recommendations.extend([
                 "Excellent grip strength! Keep up the good work",
                 "Consider sharing your fitness routine with others",
                 "Regular assessment helps track long-term progress"
             ])
+        elif category == "Too High":
+            recommendations.extend([
+                "Unusually high grip strength detected - this may indicate underlying conditions",
+                "Consider consulting a neurologist to rule out conditions like Parkinson's or dystonia",
+                "Monitor for muscle tension or involuntary movements",
+                "Ensure proper technique during strength assessments"
+            ])
         
         # Age-specific recommendations
         if request.age:
-            if request.age > 60 and average < 30:
+            if request.age > 60 and average < 15:
                 recommendations.append("For your age group, maintaining strength is important - consider physiotherapy exercises")
             elif request.age < 18:
                 recommendations.append("Ensure proper form and supervision during strength exercises")
