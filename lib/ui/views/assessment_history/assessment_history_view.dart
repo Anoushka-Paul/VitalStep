@@ -197,16 +197,16 @@ class _TableView extends StatelessWidget {
             child: Icon(Icons.calendar_today_rounded, color: color, size: 20),
           ),
           horizontalSpaceSmall,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(vm.getDate(test.createdAt), style: const TextStyle(fontWeight: FontWeight.bold, color: kcDarkGreyColor, fontSize: 15)),
-                verticalSpaceTiny,
-                Text("${test.trial1} | ${test.trial2} | ${test.trial3} Kg", style: const TextStyle(color: kcMediumGrey, fontSize: 12, fontWeight: FontWeight.w500)),
-              ],
-            ),
-          ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(vm.getDate(test.createdAt), style: const TextStyle(fontWeight: FontWeight.bold, color: kcDarkGreyColor, fontSize: 15)),
+                    verticalSpaceTiny,
+                    Text("${test.trial1} | ${test.trial2} | ${test.trial3} Kg", style: const TextStyle(color: kcMediumGrey, fontSize: 12, fontWeight: FontWeight.w500)),
+                  ],
+                ),
+              ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [

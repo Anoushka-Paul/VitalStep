@@ -265,11 +265,11 @@ class TestResultView extends StackedView<TestResultViewModel> {
           const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Divider(height: 1, color: kcLightGrey)),
-          _buildResultRow("Trial 1", "${fmt(test.trial1)} Kg"),
+          _buildResultRow("Reading 1", "${fmt(test.trial1)} Kg"),
           verticalSpaceSmall,
-          _buildResultRow("Trial 2", "${fmt(test.trial2)} Kg"),
+          _buildResultRow("Reading 2", "${fmt(test.trial2)} Kg"),
           verticalSpaceSmall,
-          _buildResultRow("Trial 3", "${fmt(test.trial3)} Kg"),
+          _buildResultRow("Reading 3", "${fmt(test.trial3)} Kg"),
         ],
       ),
     );

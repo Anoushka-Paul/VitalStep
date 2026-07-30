@@ -155,9 +155,9 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
               headers: [
                 "ID",
                 "Date",
-                "Trial 1 (Kg)",
-                "Trial 2 (Kg)",
-                "Trial 3 (Kg)",
+                "Reading 1 (Kg)",
+                "Reading 2 (Kg)",
+                "Reading 3 (Kg)",
                 "Average"
               ],
               data: rightHandData
@@ -181,9 +181,9 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
               headers: [
                 "ID",
                 "Date",
-                "Trial 1 (Kg)",
-                "Trial 2 (Kg)",
-                "Trial 3 (Kg)",
+                "Reading 1 (Kg)",
+                "Reading 2 (Kg)",
+                "Reading 3 (Kg)",
                 "Average"
               ],
               data: leftHandData
@@ -308,8 +308,8 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
           DataTable(
             columns: const [
               DataColumn(label: Text("ID")),
-              DataColumn(label: Text("Trial 1 (Kg)")),
-              DataColumn(label: Text("Trial 2 (Kg)")),
+              DataColumn(label: Text("Reading 1 (Kg)")),
+              DataColumn(label: Text("Reading 2 (Kg)")),
             ],
             rows: rightHandData
                 .map(
@@ -329,8 +329,8 @@ class _AssessmentHistoryPageState extends State<AssessmentHistoryPage>
           DataTable(
             columns: const [
               DataColumn(label: Text("ID")),
-              DataColumn(label: Text("Trial 1 (Kg)")),
-              DataColumn(label: Text("Trial 2 (Kg)")),
+              DataColumn(label: Text("Reading 1 (Kg)")),
+              DataColumn(label: Text("Reading 2 (Kg)")),
             ],
             rows: leftHandData
                 .map(

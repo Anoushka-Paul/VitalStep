@@ -297,11 +297,11 @@ class PatientHistoryView extends StackedView<PatientHistoryViewModel> {
           // Trial values row
           Row(
             children: [
-              _buildTrialChip('T1', reading.trial1),
+              _buildTrialChip('1', reading.trial1),
               horizontalSpaceSmall,
-              _buildTrialChip('T2', reading.trial2),
+              _buildTrialChip('2', reading.trial2),
               horizontalSpaceSmall,
-              _buildTrialChip('T3', reading.trial3),
+              _buildTrialChip('3', reading.trial3),
               const Spacer(),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,

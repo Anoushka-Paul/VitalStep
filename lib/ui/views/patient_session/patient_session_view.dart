@@ -467,11 +467,11 @@ class PatientSessionView extends StackedView<PatientSessionViewModel> {
           verticalSpaceMedium,
           Row(
             children: [
-              _buildTrialValue('T1', reading.trial1),
+              _buildTrialValue('1', reading.trial1),
               horizontalSpaceSmall,
-              _buildTrialValue('T2', reading.trial2),
+              _buildTrialValue('2', reading.trial2),
               horizontalSpaceSmall,
-              _buildTrialValue('T3', reading.trial3),
+              _buildTrialValue('3', reading.trial3),
               horizontalSpaceSmall,
               _buildAverageValue(avgValue),
             ],

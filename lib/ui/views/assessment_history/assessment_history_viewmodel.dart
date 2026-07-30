@@ -264,7 +264,7 @@ class AssessmentHistoryViewModel extends BaseViewModel {
             pw.SizedBox(height: 20),
             pw.Text("1. Right Hand Table", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.TableHelper.fromTextArray(
-              headers: ["ID", "Date", "Trial 1", "Trial 2", "Trial 3", "Average"],
+              headers: ["ID", "Date", "Reading 1", "Reading 2", "Reading 3", "Average"],
               data: rightTests.map((t) => [
                 t.id.toString(),
                 getDate(t.createdAt),
@@ -278,7 +278,7 @@ class AssessmentHistoryViewModel extends BaseViewModel {
             pw.SizedBox(height: 20),
             pw.Text("2. Left Hand Table", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.TableHelper.fromTextArray(
-              headers: ["ID", "Date", "Trial 1", "Trial 2", "Trial 3", "Average"],
+              headers: ["ID", "Date", "Reading 1", "Reading 2", "Reading 3", "Average"],
               data: leftTests.map((t) => [
                 t.id.toString(),
                 getDate(t.createdAt),
@@ -292,7 +292,7 @@ class AssessmentHistoryViewModel extends BaseViewModel {
             pw.SizedBox(height: 20),
             pw.Text("3. Latest Assessment Summary", style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.TableHelper.fromTextArray(
-              headers: ["Hand", "Date", "Trial 1", "Trial 2", "Trial 3", "Average"],
+              headers: ["Hand", "Date", "Reading 1", "Reading 2", "Reading 3", "Average"],
               data: [
                 if (rightTests.isNotEmpty) () {
                   final t = rightTests.reduce((a, b) => a.createdAt.isAfter(b.createdAt) ? a : b);
