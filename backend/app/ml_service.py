@@ -216,12 +216,15 @@ class MLModelService:
     def _prepare_features(self, request: MLPredictionRequest) -> pd.DataFrame:
         """Prepare feature DataFrame for model prediction - matches training pipeline exactly"""
         age = request.age
-        gender = request.gender
-        dominant_hand = request.dominant_hand
+        gender = self._normalise_gender(request.gender)
+        # The enhanced artifact was trained before hand-specific values were
+        # collected, so its encoders only contain "Unknown" for these fields.
+        # Sending left/right would be silently encoded as all zeroes.
+        dominant_hand = "Unknown"
         height = request.height
         weight = request.weight
-        hand = request.hand
-        posture = request.posture
+        hand = "Unknown"
+        posture = self._normalise_posture(request.posture)
         
         bmi = weight / ((height / 100) ** 2) if height > 0 else 22.0
         
@@ -395,6 +398,36 @@ class MLModelService:
     @staticmethod
     def _age_group_ordinal(age: int) -> float:
         return float(min(85, max(25, ((age - 20) // 10) * 10 + 25)))
+
+    @staticmethod
+    def _normalise_gender(gender: str) -> str:
+        value = gender.strip().lower()
+        if value in {"f", "female", "woman"}:
+            return "F"
+        if value in {"m", "male", "man"}:
+            return "M"
+        raise ValueError("Gender must be Female/F or Male/M for the enhanced model")
+
+    @staticmethod
+    def _normalise_posture(posture: str) -> str:
+        key = posture.strip().lower().replace("-", "_").replace(" ", "_")
+        postures = {
+            "backward_off_loading": "Backward_Off_Loading",
+            "forward_loading": "Forward_Loading",
+            "full_arm_weight": "Full_Arm_Weight",
+            "full_weight_bearing": "Full_Weight_Bearing",
+            "side_loading": "Side_Loading",
+            "side_off_loading": "Side_Off_Loading",
+            "sitting": "Sitting",
+        }
+        try:
+            return postures[key]
+        except KeyError as error:
+            raise ValueError(
+                "Posture must be one of: Backward_Off_Loading, Forward_Loading, "
+                "Full_Arm_Weight, Full_Weight_Bearing, Side_Loading, "
+                "Side_Off_Loading, Sitting"
+            ) from error
 
     @staticmethod
     def _bmi_category(bmi: float) -> str:
