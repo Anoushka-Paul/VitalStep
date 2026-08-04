@@ -17,7 +17,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY ./app ./app
 COPY hubspot_utils.py ./hubspot_utils.py
-COPY ml/artifacts /app/ml/artifacts
+
+# Download ML model artifacts during build (avoids runtime download race condition)
+RUN mkdir -p ml/artifacts && \
+    curl -fsSL -o ml/artifacts/force_quantiles_enhanced.joblib \
+    https://raw.githubusercontent.com/Anoushka-Paul/VitalStep/main/ml/artifacts/force_quantiles_enhanced.joblib && \
+    ls -lh ml/artifacts/
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
