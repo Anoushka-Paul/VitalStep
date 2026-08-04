@@ -32,7 +32,7 @@ class MLModelService:
         
         # Model metadata
         self.feature_names = ["trial1", "trial2", "trial3", "hand_encoded", "posture_encoded"]
-        self.categories = ["Weak", "Below Average", "Average", "Above Average", "Strong"]
+        self.categories = ["Too weak", "weak", "normal", "high", "too high"]
         
         # In-memory prediction history
         self.predictions: Dict[str, PredictionRecord] = {}
@@ -170,21 +170,21 @@ class MLModelService:
             ML prediction response
         """
         if average < 20:
-            category = "Weak"
+            category = "Too weak"
             percentile = 10.0
         elif average < 30:
-            category = "Below Average"
+            category = "weak"
             percentile = 30.0
         elif average < 45:
-            category = "Average"
+            category = "normal"
             percentile = 50.0
         elif average < 60:
-            category = "Above Average"
+            category = "high"
             percentile = 75.0
         else:
-            category = "Strong"
+            category = "too high"
             percentile = 90.0
-        
+
         recommendations = self._generate_recommendations(average, request, category)
         
         return MLPredictionResponse(
@@ -244,19 +244,19 @@ class MLModelService:
             (category, percentile) tuple
         """
         if actual < lower:
-            category = "Weak"
+            category = "Too weak"
             percentile = 5.0
         elif actual < median:
-            category = "Below Average"
+            category = "weak"
             percentile = 25.0
         elif actual < upper:
-            category = "Average"
+            category = "normal"
             percentile = 50.0
         elif actual < upper * 1.2:
-            category = "Above Average"
+            category = "high"
             percentile = 75.0
         else:
-            category = "Strong"
+            category = "too high"
             percentile = 90.0
         
         return category, percentile
@@ -264,45 +264,45 @@ class MLModelService:
     def _get_category(self, value: float) -> str:
         """Get category based on value"""
         if value < 20:
-            return "Weak"
+            return "Too weak"
         elif value < 30:
-            return "Below Average"
+            return "weak"
         elif value < 45:
-            return "Average"
+            return "normal"
         elif value < 60:
-            return "Above Average"
+            return "high"
         else:
-            return "Strong"
+            return "too high"
     
     def _generate_recommendations(self, average: float, request: MLPredictionRequest, category: str) -> List[str]:
         """Generate health recommendations based on grip strength category"""
         recommendations = []
         
-        if category == "Weak":
+        if category == "Too weak":
             recommendations.extend([
                 "Consider consulting a healthcare provider for a comprehensive assessment",
                 "Start with light resistance training exercises",
                 "Focus on overall physical activity and mobility"
             ])
-        elif category == "Below Average":
+        elif category == "weak":
             recommendations.extend([
                 "Regular strength training can help improve grip strength",
                 "Consider exercises like hand squeezers or stress balls",
                 "Maintain a balanced diet with adequate protein intake"
             ])
-        elif category == "Average":
+        elif category == "normal":
             recommendations.extend([
                 "Good grip strength! Continue regular exercise",
                 "Consider progressive overload training for improvement",
                 "Maintain current fitness routine"
             ])
-        elif category == "Above Average":
+        elif category == "high":
             recommendations.extend([
                 "Excellent grip strength! Keep up the good work",
                 "Consider sharing your fitness routine with others",
                 "Regular assessment helps track long-term progress"
             ])
-        elif category == "Strong":
+        elif category == "too high":
             recommendations.extend([
                 "Exceptional grip strength! Keep challenging yourself",
                 "Consider advanced training techniques",
