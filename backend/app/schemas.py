@@ -1,7 +1,7 @@
 """
 Pydantic schemas for request/response validation
 """
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -92,21 +92,28 @@ class MLPredictionRequest(BaseModel):
     trial1: float = Field(..., ge=0, description="First trial reading in kg")
     trial2: float = Field(..., ge=0, description="Second trial reading in kg")
     trial3: float = Field(..., ge=0, description="Third trial reading in kg")
-    hand: Optional[str] = Field(None, pattern="^(left|right)$", description="Dominant hand")
-    posture: Optional[str] = Field(None, description="Posture during test")
-    age: Optional[int] = Field(None, ge=0, le=150, description="Patient age")
-    gender: Optional[str] = Field(None, max_length=50, description="Patient gender")
-    height: Optional[float] = Field(None, ge=0, description="Height in cm")
-    weight: Optional[float] = Field(None, ge=0, description="Weight in kg")
-    palm_length: Optional[float] = Field(None, ge=0, description="Palm length in cm")
-    palm_width: Optional[float] = Field(None, ge=0, description="Palm width in cm")
-    knuckle_length: Optional[float] = Field(None, ge=0, description="Knuckle length in cm")
-    dominant_hand: Optional[str] = Field(None, max_length=50, description="Dominant hand")
+    hand: str = Field(..., pattern="^(left|right)$", description="Hand used for this test")
+    posture: str = Field(..., min_length=1, description="Posture during test")
+    age: int = Field(..., ge=1, le=150, description="Patient age")
+    gender: str = Field(..., min_length=1, max_length=50, description="Patient gender")
+    height: float = Field(..., gt=0, description="Height in cm")
+    weight: float = Field(..., gt=0, description="Weight in kg")
+    palm_length: Optional[float] = Field(None, gt=0, description="Palm length in cm")
+    palm_width: Optional[float] = Field(None, gt=0, description="Palm width in cm")
+    knuckle_length: Optional[float] = Field(None, gt=0, description="Knuckle length in cm")
+    dominant_hand: str = Field(..., min_length=1, max_length=50, description="Patient dominant hand")
 
     @field_validator("hand", mode="before")
     @classmethod
     def lowercase_hand(cls, v):
         if v is not None and isinstance(v, str):
+            return v.lower()
+        return v
+
+    @field_validator("dominant_hand", mode="before")
+    @classmethod
+    def lowercase_dominant_hand(cls, v):
+        if isinstance(v, str):
             return v.lower()
         return v
 
@@ -123,8 +130,19 @@ class MLPredictionResponse(BaseModel):
     predicted_category: str = Field(..., description="Strength category prediction")
     confidence: Optional[float] = Field(None, description="Prediction confidence score")
     percentile: Optional[float] = Field(None, description="Percentile ranking")
+    expected_lower_kg: Optional[float] = Field(None, description="Modelled 5th-percentile reference force")
+    expected_median_kg: Optional[float] = Field(None, description="Modelled median reference force")
+    expected_upper_kg: Optional[float] = Field(None, description="Modelled 95th-percentile reference force")
     recommendations: List[str] = Field(default_factory=list, description="Health recommendations")
     model_version: str = Field(..., description="ML model version used")
+    model_source: Literal["latest_model", "fallback_model"] = Field(
+        ..., description="Whether the response came from the enhanced model or load-failure fallback"
+    )
+    fallback_reason: Optional[str] = Field(
+        None, description="Why fallback was used; omitted for enhanced-model predictions"
+    )
+
+    model_config = {"protected_namespaces": ()}
 
 
 class BatchPredictionRequest(BaseModel):

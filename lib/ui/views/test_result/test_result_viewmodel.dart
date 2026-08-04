@@ -82,11 +82,12 @@ class TestResultViewModel extends BaseViewModel {
         patient: patient,
         hand: completedTest.hand,
         posture: completedTest.posture,
+        trial1: completedTest.trial1,
+        trial2: completedTest.trial2,
+        trial3: completedTest.trial3,
       );
       notifyListeners();
-    } catch (_) {
-      // Existing rule-based analysis remains the intentional fallback.
-    }
+    } catch (_) {}
   }
 
   /// Returns a composite key used to deduplicate dual-writes.
@@ -207,27 +208,24 @@ class TestResultViewModel extends BaseViewModel {
               double.parse(test!.trial2) +
               double.parse(test!.trial3)) /
           3;
-      final range =
-          '${reference.p05Kg.toStringAsFixed(1)}–${reference.p95Kg.toStringAsFixed(1)} Kg';
-      if (average < reference.p05Kg) {
-        return 'Your ${average.toStringAsFixed(1)} Kg result is below the modelled reference range ($range) for this profile. This is a cohort comparison, not a diagnosis.';
+      final range = reference.p05Kg != null && reference.p95Kg != null
+          ? '${reference.p05Kg!.toStringAsFixed(1)}–${reference.p95Kg!.toStringAsFixed(1)} Kg'
+          : 'not available for the fallback model';
+      if (reference.p05Kg != null && average < reference.p05Kg!) {
+        return 'Palm Press flag: ${reference.flag}. Modelled reference range: $range. Source: ${reference.modelSource}.';
       }
-      if (average > reference.p95Kg) {
-        return 'Your ${average.toStringAsFixed(1)} Kg result is above the modelled reference range ($range) for this profile.';
+      if (reference.p95Kg != null && average > reference.p95Kg!) {
+        return 'Palm Press flag: ${reference.flag}. Modelled reference range: $range. Source: ${reference.modelSource}.';
       }
-      return 'Your ${average.toStringAsFixed(1)} Kg result is within the modelled reference range ($range) for this profile.';
+      return 'Palm Press flag: ${reference.flag}. Modelled reference range: $range. Source: ${reference.modelSource}.';
     }
     
     // Use new recommendation service if profile available
     if (profile != null) {
-      final recommendations = _analysisService.recommendationService.generateRecommendations(
-        profile: profile,
-        test: test!,
-      );
-      return recommendations['insight'] ?? _analysisService.analyzeTrials(test!);
+      return 'The Palm Press model result is unavailable. Check the connection and complete all patient measurements before retesting.';
     }
     
-    return _analysisService.analyzeTrials(test!);
+    return 'The Palm Press model result is unavailable. Check the connection and complete all patient measurements before retesting.';
   }
 
   Future<List<String>> getRecoveryTips() async {
@@ -253,7 +251,9 @@ class TestResultViewModel extends BaseViewModel {
       // Continue without profile
     }
     
-    return _analysisService.getRecoveryTips(test!, profile: profile);
+    return forceReference?.recommendations ?? [
+      'Model recommendations are unavailable until the Palm Press model returns a result.'
+    ];
   }
 
   String getDate(DateTime createdAt) {

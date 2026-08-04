@@ -9,14 +9,15 @@ import 'package:vital_step/Model/research_patient.dart';
 /// read the entire research cohort.
 class ForceReferenceService {
   static const _apiUrl = String.fromEnvironment('ML_API_URL');
-  static const _apiKey = String.fromEnvironment('ML_API_KEY');
-
-  bool get isConfigured => _apiUrl.isNotEmpty && _apiKey.isNotEmpty;
+  bool get isConfigured => _apiUrl.isNotEmpty;
 
   Future<ForceReference?> getReference({
     required ResearchPatient patient,
     required String hand,
     required String posture,
+    required String trial1,
+    required String trial2,
+    required String trial3,
   }) async {
     if (!isConfigured) return null;
     final payload = <String, dynamic>{
@@ -30,19 +31,19 @@ class ForceReferenceService {
       'palm_length': patient.palmLength,
       'palm_width': patient.palmWidth,
       'knuckle_length': patient.knuckleLength,
-      // Add CSV group flags here only when they are known for this patient.
-      'flags': <String, String>{},
+      'trial1': double.parse(trial1),
+      'trial2': double.parse(trial2),
+      'trial3': double.parse(trial3),
     };
     try {
       final response = await http
-          .post(Uri.parse('$_apiUrl/v1/force-reference'),
-              headers: {'Content-Type': 'application/json', 'X-Api-Key': _apiKey},
+          .post(Uri.parse('$_apiUrl/api/v1/ml/predict'),
+              headers: const {'Content-Type': 'application/json'},
               body: jsonEncode(payload))
           .timeout(const Duration(seconds: 5));
       if (response.statusCode != 200) return null;
       return ForceReference.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
     } catch (_) {
-      // Reference ranges are an enhancement; test results must work offline.
       return null;
     }
   }

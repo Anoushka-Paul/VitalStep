@@ -42,7 +42,7 @@ async def lifespan(app: FastAPI):
     ml_service = get_ml_service()
     model_loaded = ml_service.load_model()
     if not model_loaded:
-        logger.warning("ML model not loaded - using fallback predictions")
+        logger.warning("ML model not loaded - fallback predictions are marked explicitly in every response")
     
     logger.info("Application startup complete")
     

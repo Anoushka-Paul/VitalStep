@@ -17,6 +17,10 @@ from app.schemas import MLPredictionRequest, MLPredictionResponse, PredictionRec
 logger = logging.getLogger(__name__)
 
 
+class ModelPredictionError(RuntimeError):
+    """A loaded model could not produce a valid prediction."""
+
+
 class MLModelService:
     """
     Service for managing ML model predictions
@@ -29,6 +33,7 @@ class MLModelService:
         self.model_path = Path(settings.MODEL_PATH)
         self.is_loaded = False
         self.load_timestamp = None
+        self.load_error: Optional[str] = None
         
         # Model metadata
         self.feature_names = ["trial1", "trial2", "trial3", "hand_encoded", "posture_encoded"]
@@ -45,16 +50,19 @@ class MLModelService:
             bool: True if model loaded successfully
         """
         try:
-            model_file = self.model_path / "force_quantiles_enhanced.joblib"
+            model_file = self._resolve_model_file()
             
             if not model_file.exists():
-                logger.warning(f"Model file not found at {model_file}, using fallback predictions")
+                self.load_error = f"Enhanced model file not found at {model_file}"
+                logger.warning("%s; fallback model will be used", self.load_error)
                 self.is_loaded = False
                 return False
             
             self.model = joblib.load(model_file)
+            self._validate_model_artifact(self.model)
             self.is_loaded = True
             self.load_timestamp = datetime.now()
+            self.load_error = None
             
             logger.info(f"ML model loaded successfully from {model_file}")
             logger.info(f"Model version: {self.model_version}")
@@ -62,7 +70,8 @@ class MLModelService:
             return True
             
         except Exception as e:
-            logger.error(f"Failed to load ML model: {e}")
+            self.load_error = f"Enhanced model could not be loaded: {e}"
+            logger.error(self.load_error)
             self.is_loaded = False
             self.model = None
             return False
@@ -81,7 +90,7 @@ class MLModelService:
         try:
             average = round((request.trial1 + request.trial2 + request.trial3) / 3, 2)
             
-            if self.is_loaded and self.model:
+            if self.is_loaded and self.model is not None:
                 result = self._model_predict(request, average)
             else:
                 result = self._fallback_predict(request, average)
@@ -109,7 +118,7 @@ class MLModelService:
             
         except Exception as e:
             logger.error(f"Prediction error: {e}")
-            raise RuntimeError(f"Failed to make prediction: {e}")
+            raise
     
     def _model_predict(self, request: MLPredictionRequest, actual_average: float) -> MLPredictionResponse:
         """Use loaded quantile regression model for prediction"""
@@ -149,14 +158,17 @@ class MLModelService:
                 predicted_category=category,
                 confidence=round(confidence, 2),
                 percentile=round(percentile, 1),
+                expected_lower_kg=round(lower_pred, 2),
+                expected_median_kg=round(median_pred, 2),
+                expected_upper_kg=round(upper_pred, 2),
                 recommendations=recommendations,
-                model_version=self.model_version
+                model_version=self.model_version,
+                model_source="latest_model"
             )
             
         except Exception as e:
-            logger.error(f"Model prediction error: {e}")
-            # Fallback to rule-based
-            return self._fallback_predict(request, actual_average)
+            logger.exception("Enhanced model prediction failed; no fallback is permitted after a successful load")
+            raise ModelPredictionError("The enhanced model is loaded but could not produce a prediction") from e
     
     def _fallback_predict(self, request: MLPredictionRequest, average: float) -> MLPredictionResponse:
         """
@@ -192,22 +204,24 @@ class MLModelService:
             predicted_category=category,
             confidence=0.0,
             percentile=percentile,
+            expected_lower_kg=None,
+            expected_median_kg=None,
+            expected_upper_kg=None,
             recommendations=recommendations,
-            model_version="fallback-rules"
+            model_version="fallback-rules",
+            model_source="fallback_model",
+            fallback_reason=self.load_error or "Enhanced model was not loaded"
         )
     
     def _prepare_features(self, request: MLPredictionRequest) -> pd.DataFrame:
         """Prepare feature DataFrame for model prediction - matches training pipeline exactly"""
-        age = getattr(request, 'age', None) or 35
-        gender = getattr(request, 'gender', None) or "Male"
-        dominant_hand = getattr(request, 'dominant_hand', None) or getattr(request, 'hand', None) or "right"
-        height = getattr(request, 'height', None) or 170.0
-        weight = getattr(request, 'weight', None) or 70.0
-        palm_length = getattr(request, 'palm_length', None) or 18.0
-        palm_width = getattr(request, 'palm_width', None) or 8.5
-        knuckle_length = getattr(request, 'knuckle_length', None) or 15.0
-        hand = getattr(request, 'hand', None) or "right"
-        posture = getattr(request, 'posture', None) or "sitting"
+        age = request.age
+        gender = request.gender
+        dominant_hand = request.dominant_hand
+        height = request.height
+        weight = request.weight
+        hand = request.hand
+        posture = request.posture
         
         bmi = weight / ((height / 100) ** 2) if height > 0 else 22.0
         
@@ -216,9 +230,6 @@ class MLModelService:
             "height": [height],
             "weight": [weight],
             "bmi": [bmi],
-            "palm_length": [palm_length],
-            "palm_width": [palm_width],
-            "knuckle_length": [knuckle_length],
             "gender": [gender],
             "dominant_hand": [dominant_hand],
             "hand": [hand],
@@ -228,12 +239,10 @@ class MLModelService:
             "bmi_squared": [bmi ** 2],
             "age_squared": [age ** 2],
             "body_surface_area": [0.007184 * (weight ** 0.425) * (height ** 0.725)],
-            "hand_body_ratio": [palm_length / (height + 1e-6)],
-            "age_group_ordinal": [50.0],
+            "age_group_ordinal": [self._age_group_ordinal(age)],
         }
         
         df = pd.DataFrame(data)
-        df["age_group"] = "Unknown"
         return df
     
     def _categorize_vs_quantiles(self, actual: float, lower: float, median: float, upper: float) -> tuple[str, float]:
@@ -243,80 +252,59 @@ class MLModelService:
         Returns:
             (category, percentile) tuple
         """
-        if actual < lower:
+        lower_half_width = max(median - lower, 0.01)
+        upper_half_width = max(upper - median, 0.01)
+
+        if actual < lower - lower_half_width:
             category = "Too weak"
-            percentile = 5.0
+            percentile = 1.0
+        elif actual < lower:
+            category = "weak"
+            percentile = 3.0
         elif actual < median:
             category = "weak"
-            percentile = 25.0
+            percentile = 27.5
         elif actual < upper:
             category = "normal"
-            percentile = 50.0
-        elif actual < upper * 1.2:
+            percentile = 72.5
+        elif actual < upper + upper_half_width:
             category = "high"
-            percentile = 75.0
+            percentile = 97.0
         else:
             category = "too high"
-            percentile = 90.0
+            percentile = 99.0
         
         return category, percentile
     
-    def _get_category(self, value: float) -> str:
-        """Get category based on value"""
-        if value < 20:
-            return "Too weak"
-        elif value < 30:
-            return "weak"
-        elif value < 45:
-            return "normal"
-        elif value < 60:
-            return "high"
-        else:
-            return "too high"
-    
     def _generate_recommendations(self, average: float, request: MLPredictionRequest, category: str) -> List[str]:
-        """Generate health recommendations based on grip strength category"""
-        recommendations = []
-        
-        if category == "Too weak":
-            recommendations.extend([
-                "Consider consulting a healthcare provider for a comprehensive assessment",
-                "Start with light resistance training exercises",
-                "Focus on overall physical activity and mobility"
-            ])
-        elif category == "weak":
-            recommendations.extend([
-                "Regular strength training can help improve grip strength",
-                "Consider exercises like hand squeezers or stress balls",
-                "Maintain a balanced diet with adequate protein intake"
-            ])
-        elif category == "normal":
-            recommendations.extend([
-                "Good grip strength! Continue regular exercise",
-                "Consider progressive overload training for improvement",
-                "Maintain current fitness routine"
-            ])
-        elif category == "high":
-            recommendations.extend([
-                "Excellent grip strength! Keep up the good work",
-                "Consider sharing your fitness routine with others",
-                "Regular assessment helps track long-term progress"
-            ])
-        elif category == "too high":
-            recommendations.extend([
-                "Exceptional grip strength! Keep challenging yourself",
-                "Consider advanced training techniques",
-                "Regular assessment helps track long-term progress"
-            ])
-        
-        # Age-specific recommendations
-        if request.age:
-            if request.age > 60 and average < 30:
-                recommendations.append("For your age group, maintaining strength is important - consider physiotherapy exercises")
-            elif request.age < 18:
-                recommendations.append("Ensure proper form and supervision during strength exercises")
-        
-        return recommendations
+        """Apply every recommendation rule from the Palm Press reference document."""
+        severity = {
+            "Too weak": "Severe Low", "weak": "Mild Low", "normal": "Normal – Sweet Spot",
+            "high": "Mild High", "too high": "Severe High",
+        }[category]
+        direction = "low" if category in {"Too weak", "weak"} else "mid" if category == "normal" else "high"
+        bmi = request.weight / ((request.height / 100) ** 2)
+        bmi_category = self._bmi_category(bmi)
+        nutrition = {
+            "Underweight": {"low": "Eat more, denser calories (ghee, nut butter, full-fat dairy); palm-sized protein at every meal plus 2 extra snacks.", "mid": "Keep calorie-adequate diet going; don’t skip snacks.", "high": "Keep eating enough even with a strong reading — don’t cut back."},
+            "Normal": {"low": "Add protein to every meal (egg, chicken/fish, beans/lentils).", "mid": "Keep current balanced eating habits; vegetables + regular protein.", "high": "Anti-inflammatory foods: fish twice weekly, turmeric, green tea, vegetables."},
+            "Overweight": {"low": "Add protein without empty calories (egg, grilled fish, dal).", "mid": "Balance and portion awareness — half plate vegetables.", "high": "Watch portions of rice/bread/fried food; more vegetables."},
+            "Obese Class I": {"low": "Build protein carefully; food quality over quantity.", "mid": "Balanced, portion-controlled meals; steady protein.", "high": "Cut portions + anti-inflammatory foods; even modest weight loss helps."},
+            "Obese Class II": {"low": "Protein-rich, lower-calorie meals (grilled fish, dal, paneer).", "mid": "Structured portion control; consider a doctor-guided nutrition plan.", "high": "Joint-friendly, portion-controlled meals; modest weight loss eases joint strain."},
+        }[bmi_category][direction]
+        movement = self._movement_recommendation(request.posture, direction, request.age)
+        habits = self._daily_habits_recommendation(request.age, request.gender)
+        follow_up = {
+            "Severe Low": "See your doctor soon — ask about a check-up covering vitamin D, B12, and thyroid function; consider a physiotherapy referral.",
+            "Mild Low": "Give it about 8–12 weeks of consistent protein and movement changes, then check again.",
+            "Normal – Low Side": "No fixed clinical interval — fold into your next routine health visit (often every 6–12 months).",
+            "Normal – Sweet Spot": "No set recheck schedule needed — mention at your next routine check-up.",
+            "Normal – High Side": "No set recheck schedule needed — mention at next check-up; watch for signs of overexertion.",
+            "Mild High": "Give it about 4–6 weeks of easing grip and adjusting setup, then reassess.",
+            "Severe High": "See a doctor or physiotherapist to check for an underlying cause of overcompensation.",
+        }[severity]
+        insight = f"Palm Press flag: {category} ({severity}). Your average result is {average:.1f} kg."
+        return [insight, f"Nutrition: {nutrition}", f"Movement: {movement}", f"Daily habits: {habits}", f"Follow-up: {follow_up}"]
     
     def batch_predict(self, requests: List[MLPredictionRequest]) -> Dict[str, Any]:
         """
@@ -357,6 +345,8 @@ class MLModelService:
             "is_loaded": self.is_loaded,
             "load_timestamp": self.load_timestamp.isoformat() if self.load_timestamp else None,
             "model_path": str(self.model_path),
+            "model_source": "latest_model" if self.is_loaded else "fallback_model",
+            "fallback_reason": self.load_error,
             "feature_names": self.feature_names,
             "categories": self.categories,
             "total_predictions": len(self.predictions)
@@ -386,6 +376,70 @@ class MLModelService:
         """Reload model from disk"""
         logger.info("Reloading ML model...")
         return self.load_model()
+
+    def _resolve_model_file(self) -> Path:
+        configured = self.model_path / "force_quantiles_enhanced.joblib"
+        if configured.is_absolute() or configured.exists():
+            return configured
+        repository_root = Path(__file__).resolve().parents[2]
+        return repository_root / configured
+
+    @staticmethod
+    def _validate_model_artifact(artifact: Any) -> None:
+        required = {"models", "features"}
+        if not isinstance(artifact, dict) or not required.issubset(artifact):
+            raise ValueError("Artifact is not a compatible enhanced quantile model")
+        if not {"lower", "median", "upper"}.issubset(artifact["models"]):
+            raise ValueError("Artifact does not contain all quantile models")
+
+    @staticmethod
+    def _age_group_ordinal(age: int) -> float:
+        return float(min(85, max(25, ((age - 20) // 10) * 10 + 25)))
+
+    @staticmethod
+    def _bmi_category(bmi: float) -> str:
+        if bmi < 18.5:
+            return "Underweight"
+        if bmi < 25:
+            return "Normal"
+        if bmi < 30:
+            return "Overweight"
+        if bmi < 35:
+            return "Obese Class I"
+        return "Obese Class II"
+
+    @staticmethod
+    def _movement_recommendation(posture: str, direction: str, age: int) -> str:
+        key = posture.strip().lower().replace("_", " ")
+        rules = {
+            "backward off-loading": {"low": "Slow controlled backward bracing — lower into a chair with control, 5×, twice daily.", "mid": "Continue controlled sit-to-stand movements as routine.", "high": "Let the chair take more weight instead of holding yourself up."},
+            "forward loading": {"low": "Pushing movements — palms together, hold 5 sec, or chair push-ups.", "mid": "Continue everyday pushing tasks a few times a week.", "high": "Ease off to about half the effort when pushing (e.g. a door)."},
+            "full arm weight": {"low": "Arm-bearing tasks — carry a light bag with a straight arm.", "mid": "Continue arm-bearing activities enjoyed (carrying, gardening, yoga).", "high": "Distribute weight more evenly through the body, not just the arms."},
+            "full weight-bearing": {"low": "Slow chair stands + palm presses against a wall.", "mid": "Continue standing weight-bearing tasks as part of normal day.", "high": "Let the legs do more of the work than the hands."},
+            "side loading": {"low": "Sideways bracing — hold a light bottle out to the side, 5 sec.", "mid": "Continue sideways-reaching tasks as part of routine.", "high": "Use a lighter touch when reaching or bracing sideways."},
+            "side off-loading": {"low": "Controlled sideways release — hold, then slowly release grip.", "mid": "Continue balanced sideways movements in daily tasks.", "high": "Ease grip gradually rather than holding tight to the last moment."},
+            "sitting": {"low": "Seated chair push-ups + soft ball squeezes, 3×/week.", "mid": "Stand and stretch fingers every 30–45 min if sitting long periods.", "high": "Check grip on mouse/phone/wheel — aim for about half the force."},
+        }
+        movement = rules.get(key, rules["sitting"])[direction]
+        if 60 <= age < 80:
+            movement += " Take it at a comfortable pace — there’s no rush."
+        elif age >= 80:
+            movement += " Have someone nearby for safety while you practice, and stop if anything feels unsteady."
+        return movement
+
+    @staticmethod
+    def _daily_habits_recommendation(age: int, gender: str) -> str:
+        if age < 60:
+            habits = "Stay hydrated and keep a steady sleep routine — 6–8 glasses of water, 7–8 hours of sleep most nights."
+        elif age < 80:
+            habits = "Drink water regularly through the day and rest well — 6–8 glasses, 7–8 hours sleep, short afternoon nap if helpful."
+        else:
+            habits = "Sip water often even without strong thirst; keep a predictable daily rhythm of meals, rest, and gentle activity."
+        if age >= 50 and gender.strip().lower() == "female":
+            habits += " Joints and bones can feel more sensitive after menopause, so gentle, regular movement matters more than pushing hard."
+        elif age >= 60 and gender.strip().lower() == "male":
+            habits += " Muscle mass naturally declines a bit faster with age, so regular use — not extra effort — is what keeps you strong."
+        return habits
 
 
 # Global ML model service instance

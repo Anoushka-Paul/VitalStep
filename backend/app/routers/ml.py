@@ -14,7 +14,7 @@ from app.schemas import (
     BatchPredictionResponse,
     PredictionRecord,
 )
-from app.ml_service import get_ml_service
+from app.ml_service import get_ml_service, ModelPredictionError
 from app.logging_config import log_request, log_response, log_error
 
 logger = logging.getLogger(__name__)
@@ -66,6 +66,12 @@ async def predict_grip_strength(request: MLPredictionRequest):
         log_error(e, logger, {"request": request.dict()})
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+    except ModelPredictionError as e:
+        log_error(e, logger, {"request": request.dict()})
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e)
         )
     except Exception as e:
