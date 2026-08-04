@@ -20,8 +20,7 @@ COPY hubspot_utils.py ./hubspot_utils.py
 
 # Download ML model artifacts during build (avoids runtime download race condition)
 RUN mkdir -p ml/artifacts && \
-    curl -fsSL -o ml/artifacts/force_quantiles_enhanced.joblib \
-    https://raw.githubusercontent.com/Anoushka-Paul/VitalStep/main/ml/artifacts/force_quantiles_enhanced.joblib && \
+    python -c "import urllib.request; urllib.request.urlretrieve('https://raw.githubusercontent.com/Anoushka-Paul/VitalStep/main/ml/artifacts/force_quantiles_enhanced.joblib', 'ml/artifacts/force_quantiles_enhanced.joblib')" && \
     ls -lh ml/artifacts/
 
 # Create non-root user
