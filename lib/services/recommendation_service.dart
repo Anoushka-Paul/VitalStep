@@ -112,7 +112,7 @@ class RecommendationService {
   Map<String, dynamic> generateRecommendations({
     required Profile profile,
     required Test test,
-    String? mlFlag, // Optional ML flag (critical/low/normal/high)
+    String? mlFlag, // Optional ML flag (too weak/weak/normal/high/too high)
   }) {
     try {
       // Calculate average
@@ -172,16 +172,22 @@ class RecommendationService {
   /// Map ML flag to severity tier
   String _mapMLFlagToTier(String mlFlag, double average, String gender) {
     final flag = mlFlag.toLowerCase();
-    if (flag.contains('critical') || flag.contains('severe')) {
-      return average < 30 ? severeLow : severeHigh;
+    if (flag.contains('too weak')) {
+      return severeLow;
     }
-    if (flag.contains('low')) {
+    if (flag.contains('weak')) {
       return average < 30 ? mildLow : normalLowSide;
     }
-    if (flag.contains('high')) {
+    if (flag.contains('normal')) {
+      return normalSweetSpot;
+    }
+    if (flag == 'too high' || flag.contains('too high')) {
+      return average > 60 ? severeHigh : mildHigh;
+    }
+    if (flag.contains('high') && !flag.contains('too')) {
       return average > 60 ? mildHigh : normalHighSide;
     }
-    // Normal
+    // Default
     return normalSweetSpot;
   }
 
