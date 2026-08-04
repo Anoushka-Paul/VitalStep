@@ -31,4 +31,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health/live')" || exit 1
 
 # Run application (use PORT env var provided by Render, default to 8000)
-CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 4
+CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
